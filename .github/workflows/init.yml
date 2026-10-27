@@ -20,14 +20,15 @@ jobs:
           echo "Renaming template-fullstack-t3 to $NEW_NAME..."
           find . -type f \( -name "*.json" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.md" -o -name "*.jsonc" -o -name "*.yml" \) \
             -not -path "*/.git/*" \
+            -not -path "*/.github/*" \
             -not -path "*/node_modules/*" \
             -not -path "*/.next/*" \
             -exec sed -i "s/template-fullstack-t3/$NEW_NAME/g; s/template_fullstack_t3/$NEW_NAME_SNAKE/g" {} +
 
-      - name: Remove init workflow and commit changes
+      - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git rm .github/workflows/init.yml
-          git commit -m "chore: initialize repository from template-fullstack-t3"
+          git add -A
+          git diff --staged --quiet || git commit -m "chore: initialize repository from template-fullstack-t3"
           git push
