@@ -1,41 +1,37 @@
 # Fullstack T3 Agent Guidelines (L1 Extension)
 
 Inherits: Universal L0 Invariants (workflow/AGENTS.md).
-Do not repeat global workflow rules here.
+Do not repeat global workflow rules here. The code map and invariants are in `ARCHITECTURE.md`.
 
 ## 1. Project Technology Stack
-- Runtime: Next.js 16.4.3 (App Router), React 19, TypeScript (strict mode), Bun 1.4.3
-- Data Layer: PostgreSQL with Drizzle ORM (`src/server/db/`)
-- API Layer: tRPC 11 (`src/server/api/`)
-- UI Kit: Tailwind CSS v4 + shadcn/ui (Base Nova style, `@base-ui/react`)
-- Environment Validation: `@t3-oss/env-nextjs` via `src/env.js`
-- Test Runner: Vitest (`*.test.ts`) via `bun run test`
-- Task Runner: Universal Makefile (`setup`, `dev`, `test`, `lint`, `fix`, `typecheck`, `check`, `build`, `audit`, `db-generate`, `db-push`, `db-migrate`)
 
-## 2. Physical File Placement Rules
-- App Pages & Layouts: `src/app/` (e.g. `src/app/page.tsx`, `layout.tsx`)
-- Global Styles: `src/app/globals.css`
-- UI Primitives (shadcn): `src/components/ui/`
-- Domain Components: `src/components/` or `src/app/_components/`
-- tRPC Routers: `src/server/api/routers/<feature>.ts`
-- API Root Router: Export combined router in `src/server/api/root.ts`
-- Database Models: Define tables in `src/server/db/schema.ts`
-- Shared Utilities: Helper functions in `src/lib/` (e.g. `src/lib/utils.ts`)\
-- Test Suites: Sister-file colocated tests (e.g. `src/lib/utils.test.ts`)
+- Next.js 16 (App Router), React 19, TypeScript strict, Bun
+- PostgreSQL with Drizzle ORM; tRPC 11; Tailwind CSS 4 with shadcn/ui
+- Environment validation: `@t3-oss/env-nextjs` in `src/shared/config/env.js`
+- Tests: Vitest, colocated `*.test.ts`
+
+## 2. Where things go
+
+- Follow the Code map in `ARCHITECTURE.md`; reuse listed helpers before writing new ones.
+- A feature lives in `src/features/<name>/` with components, server, schemas folders and an `index.ts`.
+- New top-level or `src/` directories need an ADR and a `layout.allow` change in `repo-policy.json`, in the same PR.
+- New dependencies need a row in `docs/dependencies.md` and a trigger from `docs/decisions/0003-frontend-dependency-policy.md`.
 
 ## 3. Data Access & Invariants
-- Direct access to `process.env` is forbidden. Always import `{ env }` from `"~/env"` [enforced by ast-grep].
-- Server API procedures must use `publicProcedure` from `"~/server/api/trpc"` [review-only].
-- Client Components fetch via `api.<router>.<procedure>.useQuery()` from `"~/trpc/react"` [review-only].
-- Server Components fetch via `api.<router>.<procedure>()` from `"~/trpc/server"` [review-only].
-- Database Migrations: Run `bun run db:generate` after modifying `schema.ts`.
-- Prototyping Schema Push: Run `bun run db:push` for local rapid development.
+
+- Read configuration only via `{ env }` from `"~/shared/config/env"` [enforced by ast-grep].
+- Procedures use `protectedProcedure` and filter by `ctx.ownerId` [review-only; tenant tests].
+- Client components fetch via `api` from `"~/trpc/react"`; server components via `"~/trpc/server"` [review-only].
+- Identity is a stub; mark changes with `TEMPLATE-TODO(auth)` until real authentication replaces it.
+- After editing `schema.ts` run `make db-generate`.
 
 ## 4. Verification Gates
-Run `make check` to verify task completion:
-1. Gate 1 (Typecheck): `bun run typecheck`
-2. Gate 2 (Lint & Format): `bun run lint`
-3. Gate 3 (Tests & Build): `bun run test && bun run build`
-4. Gate 4 (Dead Code): `DATABASE_URL=... bunx knip@6.43.0`
-5. Gate 5 (Duplication): `npx --yes fallow@3.33.1 dupes --quiet --no-fragments`
-6. Gate 6 (Anti-Slop): `npx --yes --package @ast-grep/cli@0.51.0 ast-grep scan && ast-grep test`
+
+Run `make verify` while working and `make check` before you finish.
+
+1. Gate 1 (Typecheck): `make typecheck`
+2. Gate 2 (Lint & Format): `make lint`
+3. Gate 3 (Tests & Build): `make test` and `make build`
+4. Gate 4 (Dead Code): `make knip`
+5. Gate 5 (Duplication): `make dupes` (fallow)
+6. Gate 6 (Anti-Slop): `make anti-slop`
