@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Notes } from "~/app/_components/notes";
 import { HydrateClient, api } from "~/trpc/server";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   void api.notes.list.prefetch();
 
