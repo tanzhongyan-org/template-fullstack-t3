@@ -4,8 +4,12 @@ import { ZodError, z } from "zod";
 import { db } from "~/server/db";
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
+  // Identity stub: reads x-user-id header with a test fallback.
+  // Single swap point for real authentication / session tokens.
+  const ownerId = opts.headers.get("x-user-id") ?? "test-owner";
   return {
     db,
+    ownerId,
     ...opts,
   };
 };

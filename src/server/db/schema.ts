@@ -1,12 +1,14 @@
 import { index, pgTable } from "drizzle-orm/pg-core";
 
-export const posts = pgTable(
-  "post",
+export const notes = pgTable(
+  "notes",
   (d) => ({
     id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    name: d.varchar({ length: 256 }),
-    createdAt: d.timestamp({ withTimezone: true }).defaultNow().notNull(),
-    updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+    ownerId: d.varchar("owner_id", { length: 256 }).notNull(),
+    title: d.varchar("title", { length: 200 }).notNull(),
+    body: d.text("body").notNull(),
+    createdAt: d.timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: d.timestamp("updated_at", { withTimezone: true }).$onUpdate(() => new Date()),
   }),
-  (t) => [index("name_idx").on(t.name)],
+  (t) => [index("notes_owner_idx").on(t.ownerId)],
 );
