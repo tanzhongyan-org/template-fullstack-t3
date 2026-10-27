@@ -3,8 +3,7 @@ message: "Direct access to process.env is forbidden outside env configuration."
 severity: error
 language: TypeScript
 ignores:
-  - "src/env.js"
-  - "src/env.ts"
+  - "src/shared/config/env.js"
 rule:
   any:
     - pattern: process.env.$VAR

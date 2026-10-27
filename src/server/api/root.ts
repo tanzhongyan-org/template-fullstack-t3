@@ -1,10 +1,10 @@
-import { notesRouter } from "~/server/api/routers/notes";
+import { notesRouter } from "~/features/notes/server/router";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
  * This is the primary router for your server.
  *
- * All routers added in /api/routers should be manually added here.
+ * Each feature router in src/features/<x>/server/router.ts is added here.
  */
 export const appRouter = createTRPCRouter({
   notes: notesRouter,

@@ -1,13 +1,20 @@
 {
-  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "next": false,
   "entry": [
+    "next.config.js",
+    "drizzle.config.ts",
+    "scripts/*.{ts,mjs}",
     "src/app/**/{page,layout,loading,error,not-found,route}.tsx",
-    "src/components/ui/*.tsx"
+    "src/app/**/route.ts",
+    "src/shared/components/ui/*.tsx",
+    "src/styles/globals.css"
   ],
-  "project": ["src/**/*.{ts,tsx,js,jsx}"],
+  "project": ["src/**/*.{ts,tsx,js,jsx}", "scripts/*.{ts,mjs}", "*.{js,ts}"],
   "drizzle": false,
-  "ignoreDependencies": ["tw-animate-css", "tailwindcss", "shadcn", "lucide-react"],
+  "ignoreDependencies": ["shadcn", "lucide-react", "markdownlint-cli2", "@ast-grep/cli", "fallow"],
   "rules": {
     "types": "off"
-  }
+  },
+  "ignoreBinaries": ["make"]
 }

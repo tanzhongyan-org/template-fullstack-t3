@@ -5,10 +5,11 @@ export default defineConfig({
   test: {
     environment: "node",
     css: false,
+    env: { TRUST_IDENTITY_HEADER: "true" },
   },
   resolve: {
     alias: {
-      "~": path.resolve(__dirname, "./src"),
+      "~": path.resolve(import.meta.dirname, "./src"),
     },
   },
 });

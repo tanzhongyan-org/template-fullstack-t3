@@ -1,9 +1,9 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import type { NextRequest } from "next/server";
-
-import { env } from "~/env";
+import { limitBody, MAX_BODY_BYTES } from "~/server/api/body-limit";
 import { appRouter } from "~/server/api/root";
 import { createTRPCContext } from "~/server/api/trpc";
+import { env } from "~/shared/config/env";
 
 /**
  * This wraps the `createTRPCContext` helper and provides the required context for the tRPC API when
@@ -15,12 +15,19 @@ const createContext = async (req: NextRequest) => {
   });
 };
 
-const handler = (req: NextRequest) =>
-  fetchRequestHandler({
+const handler = async (incoming: NextRequest) => {
+  const req = await limitBody(incoming);
+  if (!req) {
+    return Response.json(
+      { error: `Request body exceeds ${MAX_BODY_BYTES} bytes` },
+      { status: 413 },
+    );
+  }
+  return fetchRequestHandler({
     endpoint: "/api/trpc",
     req,
     router: appRouter,
-    createContext: () => createContext(req),
+    createContext: () => createContext(incoming),
     onError:
       env.NODE_ENV === "development"
         ? ({ path, error }) => {
@@ -28,5 +35,6 @@ const handler = (req: NextRequest) =>
           }
         : undefined,
   });
+};
 
 export { handler as GET, handler as POST };

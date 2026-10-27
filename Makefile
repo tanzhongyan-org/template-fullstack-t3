@@ -1,8 +1,11 @@
-.PHONY: setup dev test lint fix typecheck check build db-generate db-push db-migrate audit
+.PHONY: setup dev test lint fix typecheck verify check build audit policy template-debt \ fmt
+	anti-slop knip dupes db-generate db-push db-migrate
+
+BIN := node_modules/.bin
 
 setup:
 	bun install --frozen-lockfile
-	bunx lefthook@2.2.2 install
+	$(BIN)/lefthook install
 
 dev:
 	bun run dev
@@ -10,11 +13,16 @@ dev:
 test:
 	bun run test
 
+# Formats one file; the agent post-edit hook calls this with FILE set.
+fmt:
+	$(BIN)/biome check --write --no-errors-on-unmatched --files-ignore-unknown=true $(FILE)
+
 lint:
-	bun run lint
+	$(BIN)/biome check .
+	$(BIN)/markdownlint-cli2
 
 fix:
-	bun run lint:fix
+	$(BIN)/biome check --write .
 
 typecheck:
 	bun run typecheck
@@ -22,18 +30,31 @@ typecheck:
 build:
 	bun run build
 
+# Entry files come from knip.json; SKIP_ENV_VALIDATION keeps config loading free of a database URL.
+knip:
+	SKIP_ENV_VALIDATION=1 $(BIN)/knip
+
+dupes:
+	$(BIN)/fallow dupes --quiet --no-fragments
+
+anti-slop:
+	$(BIN)/ast-grep scan
+	$(BIN)/ast-grep test --skip-snapshot-tests
+
+policy:
+	node scripts/repo-policy.mjs all
+
 audit:
 	bun audit
 
-check:
-	bun run typecheck
-	bun run lint
-	bun run test
-	bun run build
-	DATABASE_URL="postgresql://postgres:password@localhost:5432/db" bunx knip@6.43.0
-	npx --yes fallow@3.33.1 dupes --quiet --no-fragments
-	npx --yes --package @ast-grep/cli@0.51.0 ast-grep scan
-	npx --yes --package @ast-grep/cli@0.51.0 ast-grep test --skip-snapshot-tests
+template-debt:
+	@git grep -n "TEMPLATE-TODO(" -- . ':(exclude)Makefile' ':(exclude).ast-grep' || true
+
+# Fast gate for hooks: no database, no build.
+verify: typecheck lint anti-slop policy
+
+# Full gate set used by CI. Tests need DATABASE_URL and a migrated database.
+check: typecheck lint test build knip dupes anti-slop policy
 
 db-generate:
 	bun run db:generate
