@@ -38,7 +38,7 @@ async function main() {
       process.argv[3];
     if (filePath && fs.existsSync(filePath)) {
       try {
-        execSync(`bunx biome check --write "${filePath}"`, {
+        execSync(`node_modules/.bin/biome check --write "${filePath}"`, {
           stdio: "inherit",
           timeout: 5000,
         });
@@ -50,34 +50,16 @@ async function main() {
   }
 
   if (mode === "stop") {
-    // Anti-loop safeguard: check harness flag and local marker
-    const markerFile = ".git/agent-hook-stop-blocked";
-    if (payload.stop_hook_active === true || fs.existsSync(markerFile)) {
-      if (fs.existsSync(markerFile)) {
-        try {
-          fs.unlinkSync(markerFile);
-        } catch {}
-      }
-      process.exit(0);
-    }
+    if (payload.stop_hook_active === true) process.exit(0);
+    const dirty = execSync("git status --porcelain", { encoding: "utf8" }).trim();
+    if (!dirty) process.exit(0);
 
     try {
-      execSync("bun run check", { stdio: "inherit", timeout: 120000 });
-      if (fs.existsSync(markerFile)) {
-        try {
-          fs.unlinkSync(markerFile);
-        } catch {}
-      }
+      execSync("make verify", { stdio: "pipe", timeout: 120000 });
       process.exit(0);
-    } catch (_err) {
-      // Create marker to prevent consecutive block loop
-      try {
-        fs.writeFileSync(markerFile, Date.now().toString());
-      } catch {}
-
-      const msg = "Verification check failed. Fix errors before finishing turn.";
-      console.error(msg);
-      process.stdout.write(`${JSON.stringify({ decision: "block", reason: msg })}\n`);
+    } catch (err) {
+      const out = `${err.stdout ?? ""}${err.stderr ?? ""}`.split("\n").slice(-40).join("\n");
+      console.error(out);
       process.exit(2);
     }
   }
