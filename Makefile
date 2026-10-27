@@ -1,4 +1,4 @@
-.PHONY: setup dev test lint fix typecheck verify check build audit policy template-debt \
+.PHONY: setup dev test lint fix typecheck verify check build audit policy template-debt \ fmt
 	anti-slop knip dupes db-generate db-push db-migrate
 
 BIN := node_modules/.bin
@@ -12,6 +12,10 @@ dev:
 
 test:
 	bun run test
+
+# Formats one file; the agent post-edit hook calls this with FILE set.
+fmt:
+	$(BIN)/biome check --write --no-errors-on-unmatched --files-ignore-unknown=true $(FILE)
 
 lint:
 	$(BIN)/biome check .
