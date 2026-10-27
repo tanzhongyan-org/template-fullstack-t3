@@ -31,7 +31,7 @@ jobs:
       - name: "Gate 3: Production Build"
         run: npm run build
         env:
-          POSTGRES_URL: "postgresql://postgres:password@localhost:5432/db"
+          DATABASE_URL: "postgresql://postgres:password@localhost:5432/db"
 
       - name: "Gate 5: Duplication Audit"
         run: npx --yes fallow@3.33.1 dupes --quiet --no-fragments
