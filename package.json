@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "next build",
-    "check": "bun run typecheck && bun run lint && bun test && bun run build && npx --yes fallow@3.33.1 dupes --root . --quiet --no-fragments && npx --yes --package @ast-grep/cli ast-grep scan",
+    "check": "bun run typecheck && bun run lint && bun run test && bun run build && npx --yes fallow@3.33.1 dupes --root . --quiet --no-fragments && npx --yes --package @ast-grep/cli ast-grep scan",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",

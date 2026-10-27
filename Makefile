@@ -1,39 +1,39 @@
-.PHONY: install dev test lint lint-fix check db-generate db-push db-migrate
+.PHONY: setup dev test lint fix typecheck check build db-generate db-push db-migrate
 
-install:
-	npm install
+setup:
+	bun install --frozen-lockfile
 
 dev:
-	npm run dev
+	bun run dev
 
 test:
-	npm test
+	bun run test
 
 lint:
-	npm run lint
+	bun run lint
 
-lint-fix:
-	npm run lint:fix
+fix:
+	bun run lint:fix
 
 typecheck:
-	npm run typecheck
+	bun run typecheck
 
 build:
-	npm run build
+	bun run build
 
 check:
-	npm run typecheck
-	npm run lint
-	npm test
-	npm run build
+	bun run typecheck
+	bun run lint
+	bun run test
+	bun run build
 	npx --yes fallow@3.33.1 dupes --quiet --no-fragments
 	npx --yes --package @ast-grep/cli ast-grep scan
 
 db-generate:
-	npm run db:generate
+	bun run db:generate
 
 db-push:
-	npm run db:push
+	bun run db:push
 
 db-migrate:
-	npm run db:migrate
+	bun run db:migrate
