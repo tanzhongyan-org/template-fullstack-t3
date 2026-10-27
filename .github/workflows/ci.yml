@@ -28,8 +28,10 @@ jobs:
       - name: "Gate 2: Lint and Format"
         run: npm run lint
 
-      - name: "Gate 3: Production Build"
-        run: npm run build
+      - name: "Gate 3: Test and Build"
+        run: |
+          npm test
+          npm run build
         env:
           DATABASE_URL: "postgresql://postgres:password@localhost:5432/db"
 

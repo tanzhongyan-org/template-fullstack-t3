@@ -8,5 +8,5 @@ export default {
   dbCredentials: {
     url: env.DATABASE_URL,
   },
-  tablesFilter: ["C:GitHub\test-t3-probe_*"],
+  tablesFilter: ["template_fullstack_t3_*"],
 } satisfies Config;

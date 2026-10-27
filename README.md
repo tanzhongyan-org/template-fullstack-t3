@@ -1,29 +1,63 @@
-# Create T3 App
+# Fullstack T3 Web Application Template
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+Universal fullstack web application template (Next.js App Router, Drizzle ORM, tRPC, Tailwind CSS v4, shadcn/ui) with agentic quality guardrails and verification gates.
 
-## What's next? How do I make an app with this?
+## Features
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- **Runtime & Framework:** [Next.js 15+](https://nextjs.org/) App Router, React 19, TypeScript
+- **Database & ORM:** PostgreSQL with [Drizzle ORM](https://orm.drizzle.team/) & Drizzle Kit
+- **API Layer:** [tRPC 11](https://trpc.io/) end-to-end type safety without codegen
+- **UI & Styling:** [Tailwind CSS v4](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/) (Base Nova style), Lucide Icons
+- **Config & Validation:** [@t3-oss/env-nextjs](https://env.t3.gg/) environment validation & Zod schemas
+- **Code Quality:** [Biome](https://biomejs.dev/) (sub-100ms format & lint), Vitest, TypeScript strict mode
+- **Agent Guardrails:**
+  - `lefthook.yml`: Sub-second local Git pre-commit hooks
+  - `fallow.jsonc`: AST-aware code duplication and cognitive complexity limits
+  - `sgconfig.yml` + `.ast-grep/`: Automatic detection of placeholder stubs and unfulfilled code
+  - `.github/workflows/ci.yml`: Automated CI running the 6 Universal Verification Gates
+  - `AGENTS.md`: Runtime-specific agent invariants (L1 extension)
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Getting Started
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+### 1. Create a New Repository
+Click **"Use this template"** on GitHub or use the GitHub CLI:
+```bash
+gh repo create my-app --template tanzhongyan-org/template-fullstack-t3 --private --clone
+cd my-app
+```
+*(On first push to `main`, GitHub Actions automatically renames all template placeholders to your new repository name and self-deletes the initialization workflow).*
 
-## Learn More
+### 2. Local Setup
+```bash
+# 1. Install dependencies
+npm install
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+# 2. Configure environment
+cp .env.example .env
+# Edit DATABASE_URL in .env with your PostgreSQL credentials
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+# 3. Synchronize database schema
+npm run db:push
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+# 4. Start development server
+npm run dev
+```
 
-## How do I deploy this?
+### 3. Run Verification Gates
+```bash
+# Gate 1: Typecheck
+npm run typecheck
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+# Gate 2: Lint & Format
+npm run lint
+
+# Gate 3: Test & Build
+npm test
+npm run build
+
+# Gate 5: Duplication Audit
+npx --yes fallow@3.33.1 dupes --quiet --no-fragments
+
+# Gate 6: Anti-Slop Scan
+npx --yes --package @ast-grep/cli ast-grep scan
+```
