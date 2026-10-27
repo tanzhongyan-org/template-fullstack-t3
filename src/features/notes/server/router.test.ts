@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { db } from "../../db";
-import { appRouter } from "../root";
+import { appRouter } from "~/server/api/root";
+import { db } from "~/server/db";
 
 describe("notes router integration", () => {
   const createCallerForUser = (userId: string) => {

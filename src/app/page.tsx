@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Notes } from "~/app/_components/notes";
-import { HydrateClient, api } from "~/trpc/server";
+import { Notes } from "~/features/notes";
+import { api, HydrateClient } from "~/trpc/server";
 
 export const dynamic = "force-dynamic";
 
