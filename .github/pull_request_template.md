@@ -21,4 +21,4 @@
 - [ ] Tests cover the new behaviour at the entry point (tRPC procedure or route).
 - [ ] Docs are updated in this pull request (`ARCHITECTURE.md`, README, ADR).
 - [ ] No new dependency without a row in `docs/dependencies.md`.
-- [ ] No new directory without an ADR and a `layout.allow` change in `repo-policy.json`.
+- [ ] No new directory without an ADR and a `layout.allow` change in `scripts/repo-policy.json`.

@@ -1,4 +1,4 @@
-.PHONY: setup dev test lint fix typecheck verify check build audit policy template-debt \ fmt
+.PHONY: setup dev test lint fix typecheck verify check build audit policy template-debt fmt \
 	anti-slop knip dupes db-generate db-push db-migrate
 
 BIN := node_modules/.bin
@@ -30,7 +30,7 @@ typecheck:
 build:
 	bun run build
 
-# Entry files come from knip.json; SKIP_ENV_VALIDATION keeps config loading free of a database URL.
+# Entry files come from the package.json "knip" field; SKIP_ENV_VALIDATION keeps config loading free of a database URL.
 knip:
 	SKIP_ENV_VALIDATION=1 $(BIN)/knip
 

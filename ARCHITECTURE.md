@@ -50,7 +50,7 @@ Reuse these before you write new code.
 - A request with no trusted identity gets `UNAUTHORIZED`. [enforced by vitest]
 - Responses carry the security headers in `src/shared/config/security-headers.js`. [enforced by vitest]
 - Request bodies over 1 MB get HTTP 413. [enforced by vitest]
-- Every directory is listed in `repo-policy.json`. [enforced by `make policy`]
+- Every directory is listed in `scripts/repo-policy.json`. [enforced by `make policy`]
 - Every direct dependency has a row in `docs/dependencies.md`. [enforced by `make policy`]
 - No unused files, exports or dependencies. [enforced by knip]
 - No duplicated code blocks. [enforced by fallow]
