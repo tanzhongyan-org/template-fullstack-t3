@@ -49,11 +49,11 @@ Use [Conventional Commits](https://www.conventionalcommits.org): `feat(notes): a
 
 ## Where docs go
 
-See [docs/README.md](docs/README.md). A new top-level or `src/` directory needs an ADR in `docs/decisions/` and a `layout.allow` change in `repo-policy.json`, in the same pull request.
+See [docs/README.md](../docs/README.md). A new top-level or `src/` directory needs an ADR in `docs/decisions/` and a `layout.allow` change in `scripts/repo-policy.json`, in the same pull request.
 
 ## Maintainer notes
 
 - **Rulesets.** `.github/rulesets/main.json` is an export of a branch ruleset that requires `ci-passed` and CodeQL results. Import it under Settings, Rules, Rulesets, Import a ruleset. Nothing applies it automatically.
-- **Renovate.** `renovate.json` groups non-major updates and pins GitHub Actions to digests.
+- **Renovate.** `.github/renovate.json` groups non-major updates and pins GitHub Actions to digests.
 - **Template debt.** Run `make template-debt` to list what a derived repository must change.
 - **Licence holder.** TEMPLATE-TODO(license): replace the copyright holder in `LICENSE` in derived repositories.

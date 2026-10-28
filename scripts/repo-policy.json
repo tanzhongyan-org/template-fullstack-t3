@@ -41,6 +41,15 @@
       "src/trpc",
       "src/app/api",
       "src/app/api/**"
+    ],
+    "forbid": [
+      "CLAUDE.md",
+      "**/CLAUDE.md",
+      "CLAUDE.local.md",
+      "GEMINI.md",
+      "**/GEMINI.md",
+      ".cursorrules",
+      ".github/copilot-instructions.md"
     ]
   },
   "docs": {

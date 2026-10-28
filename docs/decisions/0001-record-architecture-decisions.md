@@ -10,7 +10,7 @@ Structural choices made without a record get reversed by people who do not know 
 
 Record each irreversible technical choice as a short ADR in `docs/decisions/NNNN-<slug>.md` using the Context, Decision, Consequences format. ADRs are append-only. A change of mind is a new ADR that states `Supersedes: NNNN`.
 
-A new top-level or `src/` directory needs an ADR and a matching change to `layout.allow` in `repo-policy.json`, in the same pull request.
+A new top-level or `src/` directory needs an ADR and a matching change to `layout.allow` in `scripts/repo-policy.json`, in the same pull request.
 
 ## Consequences
 

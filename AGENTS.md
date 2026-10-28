@@ -2,6 +2,7 @@
 
 Inherits: Universal L0 Invariants (workflow/AGENTS.md).
 Do not repeat global workflow rules here. The code map and invariants are in `ARCHITECTURE.md`.
+This is the only agent instruction file. Claude Code, Codex, Cursor, Copilot and Gemini read it. Do not add CLAUDE.md, GEMINI.md or other per-tool copies: Claude Code ignores this file once a CLAUDE.md exists. `make policy` rejects them.
 
 ## 1. Project Technology Stack
 
@@ -14,7 +15,7 @@ Do not repeat global workflow rules here. The code map and invariants are in `AR
 
 - Follow the Code map in `ARCHITECTURE.md`; reuse listed helpers before writing new ones.
 - A feature lives in `src/features/<name>/` with components, server, schemas folders and an `index.ts`.
-- New top-level or `src/` directories need an ADR and a `layout.allow` change in `repo-policy.json`, in the same PR.
+- New top-level or `src/` directories need an ADR and a `layout.allow` change in `scripts/repo-policy.json`, in the same PR.
 - New dependencies need a row in `docs/dependencies.md` and a trigger from `docs/decisions/0003-frontend-dependency-policy.md`.
 
 ## 3. Data Access & Invariants
