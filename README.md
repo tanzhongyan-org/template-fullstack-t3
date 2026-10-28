@@ -8,7 +8,13 @@ A GitHub template for a typed web app: Next.js, tRPC, Drizzle on PostgreSQL, Tai
 
 ## Quick start
 
-Install [Bun](https://bun.sh), [Docker](https://docs.docker.com/get-docker/) and Node.js 22 or later. Then run:
+Install these first:
+
+- [Bun](https://bun.sh) and Node.js 22 or later.
+- [Docker](https://docs.docker.com/get-docker/), for the local PostgreSQL container.
+- GNU make. On Windows run `winget install ezwinports.make`; on macOS run `xcode-select --install`. Restart your terminal and agent afterwards.
+
+Then run:
 
 ```bash
 gh repo create my-app --template tanzhongyan-org/template-fullstack-t3 --private --clone
@@ -34,7 +40,7 @@ make dev
 
 ## After creating your repo
 
-1. Run the **Initialize Template Repository** workflow from the Actions tab. It renames the placeholders and opens a "Template follow-ups" issue.
+1. The **Initialize Template Repository** workflow runs on your first push to `main`, or by hand from the Actions tab. It renames the placeholders and opens a "Template follow-ups" issue.
 2. Run `make template-debt`. You see one line per `TEMPLATE-TODO` marker you must resolve.
 
 ## Configuration
@@ -45,6 +51,9 @@ Copy `.env.example` to `.env`. The schema is in `src/shared/config/env.js`.
 | ----------------------- | -------- | ------- | --------------------------------------------------------------------------------------------------------- |
 | `DATABASE_URL`          | Yes      | none    | PostgreSQL connection string                                                                              |
 | `TRUST_IDENTITY_HEADER` | No       | `false` | Honour the `x-user-id` header as caller identity. When false, every protected call returns `UNAUTHORIZED` |
+| `POSTGRES_PORT`         | No       | `5432`  | Host port for the PostgreSQL container. Change it when 5432 is already in use                             |
+
+Set `AGENT_HOOK_SKIP=1` to skip the agent stop hook (the `make verify` run when an agent finishes).
 
 ## Commands
 

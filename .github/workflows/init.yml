@@ -2,6 +2,8 @@ name: Initialize Template Repository
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions: {}
 
@@ -13,12 +15,25 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
+    outputs:
+      initialized: ${{ steps.guard.outputs.initialized }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: true # the commit step below pushes
 
+      - name: Check the template is not initialized yet
+        id: guard
+        run: |
+          if grep -q "template-fullstack-t3" package.json; then
+            echo "initialized=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Template already initialized; nothing to do."
+            echo "initialized=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Rename template placeholders
+        if: steps.guard.outputs.initialized == 'true'
         run: |
           NEW_NAME="${GITHUB_REPOSITORY#*/}"
           NEW_NAME_SNAKE="${NEW_NAME//-/_}"
@@ -28,9 +43,10 @@ jobs:
             -not -path "./.github/workflows/*" \
             -not -path "*/node_modules/*" \
             -not -path "*/.next/*" \
-            -exec sed -i "s/template-fullstack-t3/$NEW_NAME/g; s/template_fullstack_t3/$NEW_NAME_SNAKE/g" {} +
+            -exec sed -i "s|tanzhongyan-org/template-fullstack-t3|${GITHUB_REPOSITORY}|g; s|template-fullstack-t3|$NEW_NAME|g; s|template_fullstack_t3|$NEW_NAME_SNAKE|g" {} +
 
       - name: Commit and push changes
+        if: steps.guard.outputs.initialized == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -40,7 +56,7 @@ jobs:
 
   follow-ups:
     needs: init-repo
-    if: github.repository != 'tanzhongyan-org/template-fullstack-t3'
+    if: github.repository != 'tanzhongyan-org/template-fullstack-t3' && needs.init-repo.outputs.initialized == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
