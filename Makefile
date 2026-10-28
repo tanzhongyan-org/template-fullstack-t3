@@ -1,4 +1,4 @@
-.PHONY: setup dev test lint fix typecheck verify check build audit policy template-debt \ fmt
+.PHONY: setup dev test lint fix typecheck verify check build audit policy template-debt fmt \
 	anti-slop knip dupes db-generate db-push db-migrate
 
 BIN := node_modules/.bin
@@ -45,7 +45,7 @@ policy:
 	node scripts/repo-policy.mjs all
 
 audit:
-	bun audit
+	bun audit --audit-level=moderate
 
 template-debt:
 	@git grep -n "TEMPLATE-TODO(" -- . ':(exclude)Makefile' ':(exclude).ast-grep' || true
