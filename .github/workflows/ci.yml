@@ -94,7 +94,7 @@ jobs:
         run: pipx run "zizmor==${ZIZMOR_VERSION}" --min-severity medium .github/workflows
 
   dependency-review:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && (!github.event.repository.private || vars.ENABLE_CODE_SECURITY == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
