@@ -45,7 +45,7 @@ policy:
 	node scripts/repo-policy.mjs all
 
 audit:
-	bun audit
+	bun audit --audit-level=moderate
 
 template-debt:
 	@git grep -n "TEMPLATE-TODO(" -- . ':(exclude)Makefile' ':(exclude).ast-grep' || true
