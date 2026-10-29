@@ -1,0 +1,18 @@
+name: Preview checks
+
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    if: github.event.deployment_status.state == 'success'
+    uses: tanzhongyan-org/.github/.github/workflows/preview-checks.yml@0c54f703d2d0d24b6ec61c8ea0f0d1a7d220f3e9 # fleet pin 2026-10-29
+    with:
+      runtime: t3
+      preview-url: ${{ github.event.deployment_status.target_url }}
+      install-command: bun install --frozen-lockfile
+    secrets:
+      preview-bypass: ${{ secrets.VERCEL_AUTOMATION_BYPASS }}
