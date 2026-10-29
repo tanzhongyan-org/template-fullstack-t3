@@ -1,0 +1,10 @@
+id: no-float-money
+message: "Money is integer minor units. Use d.integer(), never a float column."
+severity: error
+language: TypeScript
+files:
+  - "src/server/db/**"
+rule:
+  any:
+    - pattern: "d.real($$$)"
+    - pattern: "d.doublePrecision($$$)"

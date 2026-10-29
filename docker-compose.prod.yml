@@ -1,0 +1,39 @@
+# Production self-host profile: app plus its own Postgres.
+# Usage: docker compose -f docker-compose.prod.yml up --build
+# TEMPLATE-TODO(deploy): set POSTGRES_PASSWORD and the app secrets before launch.
+
+name: template-fullstack-t3-prod
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-password}@postgres:5432/template_fullstack_t3
+      TRUST_IDENTITY_HEADER: "false"
+      # Docker sets HOSTNAME to the container id, which Next.js cannot bind to.
+      HOSTNAME: "0.0.0.0"
+      PORT: "3000"
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: template_fullstack_t3
+    volumes:
+      - prod-pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d template_fullstack_t3"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  prod-pgdata:

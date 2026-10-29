@@ -1,0 +1,95 @@
+name: Template self-test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/*"
+      - "scripts/new-feature.mjs"
+      - "src/features/_example/**"
+      - "e2e/**"
+      - "playwright.config.ts"
+  schedule:
+    - cron: "23 5 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  self-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: template_fullstack_t3
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d template_fullstack_t3"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+    env:
+      DATABASE_URL: postgresql://postgres:password@localhost:5432/template_fullstack_t3
+      TRUST_IDENTITY_HEADER: "true"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up the toolchain
+        uses: tanzhongyan-org/.github/.github/actions/setup@0c54f703d2d0d24b6ec61c8ea0f0d1a7d220f3e9 # fleet pin 2026-10-29
+        with:
+          runtime: t3
+          playwright: "true"
+
+      - name: Install dependencies
+        shell: bash
+        run: bun install --frozen-lockfile
+
+      - name: Migrate the blank database
+        shell: bash
+        run: make db-migrate
+
+      - name: Run every gate
+        shell: bash
+        run: make check
+
+      - name: Seed the demo data
+        shell: bash
+        run: make seed
+
+      - name: Start the dev server
+        shell: bash
+        run: |
+          bun run dev > dev-server.log 2>&1 &
+          for _ in $(seq 1 60); do
+            curl -fsS http://localhost:3000/api/health && exit 0
+            sleep 2
+          done
+          cat dev-server.log
+          exit 1
+
+      - name: Run the E2E smoke
+        shell: bash
+        run: PREVIEW_URL=http://localhost:3000 make e2e
+
+      - name: Scaffold a probe feature and gate it
+        shell: bash
+        run: |
+          make new-feature name=selftestprobe
+          make verify
+          bun run test src/features/selftestprobe
+          rm -rf src/features/selftestprobe src/app/selftestprobe
+          git checkout -- src/server/api/root.ts
+          test -z "$(git status --porcelain src/features src/app | grep selftestprobe || true)"

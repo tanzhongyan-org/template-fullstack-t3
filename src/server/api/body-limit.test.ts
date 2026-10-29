@@ -1,3 +1,4 @@
+import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 import { POST } from "../../app/api/trpc/[trpc]/route";
 import { limitBody } from "./body-limit";
@@ -18,5 +19,14 @@ describe("request body limit", () => {
   it("answers 413 at the HTTP boundary", async () => {
     const res = await POST(post("x".repeat(1_000_001)) as never);
     expect(res.status).toBe(413);
+  });
+
+  it("rebuilds a NextRequest without losing the body", async () => {
+    const incoming = new NextRequest("http://localhost/api/trpc/notes.create", {
+      method: "POST",
+      body: "hello",
+    });
+    const limited = await limitBody(incoming, 10);
+    expect(await limited?.text()).toBe("hello");
   });
 });

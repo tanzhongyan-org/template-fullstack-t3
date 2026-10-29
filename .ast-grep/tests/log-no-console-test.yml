@@ -1,0 +1,13 @@
+id: no-console-output
+valid:
+  - 'logRequest({ requestId: "r", event: "health" });'
+  - "console.error(line);"
+invalid:
+  - "console.log(user);"
+  - 'console.info("otp", code);'
+---
+id: no-console-output-tsx
+valid:
+  - 'console.error("failed");'
+invalid:
+  - 'console.log("render");'

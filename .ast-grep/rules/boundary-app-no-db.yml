@@ -1,9 +1,12 @@
 id: app-no-db-import
 language: TypeScript
 severity: error
-message: "src/app must reach data through tRPC, not ~/server/db."
+message: "Pages and layouts must reach data through tRPC, not ~/server/db. Route handlers are the API layer and may import it."
 files:
   - "src/app/**"
+ignores:
+  - "src/app/**/route.ts"
+  - "src/app/**/route.test.ts"
 rule:
   any:
     - kind: import_statement
@@ -16,9 +19,12 @@ rule:
 id: app-no-db-import-tsx
 language: Tsx
 severity: error
-message: "src/app must reach data through tRPC, not ~/server/db."
+message: "Pages and layouts must reach data through tRPC, not ~/server/db. Route handlers are the API layer and may import it."
 files:
   - "src/app/**"
+ignores:
+  - "src/app/**/route.ts"
+  - "src/app/**/route.test.ts"
 rule:
   any:
     - kind: import_statement

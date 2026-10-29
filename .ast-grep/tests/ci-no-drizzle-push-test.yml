@@ -1,0 +1,11 @@
+id: no-drizzle-push-in-ci
+valid:
+  - "run: make db-migrate"
+invalid:
+  - "run: make db-push"
+---
+id: no-drizzle-push-in-ci-block
+valid:
+  - "run: make db-migrate"
+invalid:
+  - "run: |\n    make db-push"

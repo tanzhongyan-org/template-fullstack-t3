@@ -25,6 +25,10 @@ Every direct dependency in `package.json` has one row. Add the row in the same p
 | `tailwind-merge`           | Resolves conflicting Tailwind classes in `cn`               | `clsx` alone keeps both `px-2` and `px-4`                                                                         | Nothing                           |
 | `lucide-react`             | The one icon set                                            | Inline SVG copies drift in size and stroke                                                                        | Inline SVG                        |
 | `tw-animate-css`           | Animation utilities that shadcn components expect           | Tailwind has no enter and exit animation classes                                                                  | Nothing                           |
+| `next-themes`              | Class-based theme provider with system detection            | A hand-rolled toggle flashes the wrong theme and fights hydration                                                 | Hand-rolled theme state           |
+| `posthog-node`             | Server-side analytics capture for the taxonomy              | Client capture is blocked by ad blockers, dropping money and signup events                                        | `fetch` to PostHog                |
+| `web-vitals`               | Core Web Vitals measurement for RUM events                  | Hand-rolled observers miss the attribution the library computes                                                   | Nothing                           |
+| `sonner`                   | Toast notifications through the shadcn Toaster              | The template needs one toast system; ad-hoc alerts do not stack or dismiss                                        | `alert()` calls                   |
 
 ## Development dependencies
 
@@ -46,7 +50,13 @@ Every direct dependency in `package.json` has one row. Add the row in the same p
 | `tailwindcss`          | Utility CSS                                                 | Part of the styling stack                                           | Nothing                |
 | `@tailwindcss/postcss` | Tailwind plugin for PostCSS                                 | Next.js builds CSS through PostCSS                                  | Nothing                |
 | `postcss`              | CSS pipeline used by Next.js                                | Required by the Tailwind plugin                                     | Nothing                |
+| `storybook`            | Component workshop and the UI review surface                | Owner review needs rendered states, not code reading                | Nothing                |
+| `@storybook/nextjs`    | Storybook framework preset for Next.js                      | The core has no Next.js bundler integration                         | Nothing                |
+| `@storybook/react`     | Story types and decorators                                  | Stories import `Meta` and `StoryObj` from here                      | Nothing                |
+| `@playwright/test`     | E2E smoke, nav crawler and browser automation               | Unit tests never load a page; console errors need a real browser    | Nothing                |
+| `@axe-core/playwright` | axe accessibility checks inside Playwright                  | Manual a11y review misses rule violations                           | Nothing                |
+| `lighthouse`           | Performance and accessibility budgets on previews           | Playwright cannot score Core Web Vitals                             | Nothing                |
 
 ## Overrides
 
-`package.json` pins `esbuild` and `katex` through `overrides` because `drizzle-kit` and `markdownlint-cli2` pull in releases with open advisories. Remove an override when the parent package ships a fixed release.
+`package.json` pins `esbuild` and `katex` through `overrides` because `drizzle-kit` and `markdownlint-cli2` pull in releases with open advisories. It pins `re2js` (via `markdownlint-cli2`) and `webpack-dev-middleware` (via Storybook's webpack builder) for the same reason. Remove an override when the parent package ships a fixed release.

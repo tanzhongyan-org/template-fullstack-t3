@@ -27,7 +27,8 @@
     "incremental": true,
     /* Path Aliases */
     "paths": {
-      "~/*": ["./src/*"]
+      "~/*": ["./src/*"],
+      "@repo/shared/*": ["./packages/shared/*"]
     }
   },
   "include": [

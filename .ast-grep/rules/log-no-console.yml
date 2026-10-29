@@ -1,0 +1,38 @@
+id: no-console-output
+message: "Log through src/server/log.ts. Only the dev email sender may print, and never OTPs or tokens."
+severity: error
+language: TypeScript
+files:
+  - "src/**"
+  - "packages/**"
+  - "e2e/**"
+  - "evals/**"
+  - ".storybook/**"
+ignores:
+  - "src/server/log.ts"
+  - "src/server/email.ts"
+  - "**/*.test.ts"
+rule:
+  any:
+    - pattern: "console.log($$$)"
+    - pattern: "console.info($$$)"
+    - pattern: "console.debug($$$)"
+---
+id: no-console-output-tsx
+message: "Log through src/server/log.ts. Only the dev email sender may print, and never OTPs or tokens."
+severity: error
+language: Tsx
+files:
+  - "src/**"
+  - "packages/**"
+  - "e2e/**"
+  - "evals/**"
+  - ".storybook/**"
+ignores:
+  - "src/server/email.ts"
+  - "**/*.test.tsx"
+rule:
+  any:
+    - pattern: "console.log($$$)"
+    - pattern: "console.info($$$)"
+    - pattern: "console.debug($$$)"

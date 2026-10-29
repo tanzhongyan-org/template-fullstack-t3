@@ -1,0 +1,6 @@
+id: no-float-money
+valid:
+  - 'costMinor: d.integer("cost_minor").notNull(),'
+invalid:
+  - 'price: d.real("price"),'
+  - 'price: d.doublePrecision("price"),'

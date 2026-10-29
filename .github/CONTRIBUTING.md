@@ -27,21 +27,23 @@ make verify
 make check
 ```
 
-`make verify` runs typecheck, lint, anti-slop rules and policy checks in a few seconds with no database. `make check` adds tests, build, knip and fallow, and needs `DATABASE_URL` pointing at a migrated database. Both print nothing noisy on success and a failing gate on error.
+`make verify` runs typecheck, lint, anti-slop rules, policy and the brand gates in a few seconds with no database. `make check` adds tests, build, knip and fallow, and needs `DATABASE_URL` pointing at a migrated database. Both print nothing noisy on success and a failing gate on error.
 
 ## Add a feature
 
-Use the notes slice as the model. Replace `<name>` with your feature.
+Scaffold the slice instead of writing it by hand:
 
-1. Add the table to `src/server/db/schema.ts`, then run `make db-generate`.
-2. Create `src/features/<name>/schemas/` with the Zod input schemas.
-3. Create `src/features/<name>/server/router.ts` using `protectedProcedure` and an owner filter.
-4. Register the router in `src/server/api/root.ts`.
-5. Create `src/features/<name>/components/` and export the public component from `src/features/<name>/index.ts`.
-6. Render it from a route in `src/app/`.
-7. Write tests that call the router through `appRouter.createCaller`, including a cross-tenant read that returns `NOT_FOUND`.
-8. Update the code map in `ARCHITECTURE.md` and add a row to `docs/dependencies.md` for any new dependency.
-9. Run `make check`.
+```bash
+make new-feature name=<name>
+```
+
+It copies `src/features/_example/`, renames identifiers, registers the router in `src/server/api/root.ts` and scaffolds `src/app/<name>/` pages, so every gate passes without further edits. Then:
+
+1. Rename the shared `examples` table in `src/server/db/schema.ts` when your shape diverges, then run `make db-generate`.
+2. Extend the Zod schemas, router and components; keep `protectedProcedure` and the owner filter.
+3. Write tests that call the router through `appRouter.createCaller`, including a cross-tenant read that returns `NOT_FOUND`.
+4. Update the code map in `ARCHITECTURE.md` and add a row to `docs/dependencies.md` for any new dependency.
+5. Run `make check`.
 
 ## Commits and pull requests
 

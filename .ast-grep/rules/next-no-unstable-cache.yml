@@ -1,0 +1,21 @@
+id: no-unstable-cache
+message: "Use cacheComponents with 'use cache' + cacheTag, not unstable_cache or segment revalidate."
+severity: error
+language: TypeScript
+files:
+  - "src/**"
+rule:
+  any:
+    - pattern: "unstable_cache"
+    - pattern: "export const revalidate = $VALUE"
+---
+id: no-unstable-cache-tsx
+message: "Use cacheComponents with 'use cache' + cacheTag, not unstable_cache or segment revalidate."
+severity: error
+language: Tsx
+files:
+  - "src/**"
+rule:
+  any:
+    - pattern: "unstable_cache"
+    - pattern: "export const revalidate = $VALUE"

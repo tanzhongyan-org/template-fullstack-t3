@@ -8,6 +8,7 @@ import { securityHeaders } from "./src/shared/config/security-headers.js";
 /** @type {import("next").NextConfig} */
 const config = {
   poweredByHeader: false,
+  output: "standalone",
   images: {
     formats: ["image/avif", "image/webp"],
   },

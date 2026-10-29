@@ -1,0 +1,19 @@
+id: no-drizzle-push-in-ci
+message: "CI migrates the blank database with make db-migrate, never drizzle-kit push."
+severity: error
+language: Yaml
+files:
+  - ".github/**"
+rule:
+  kind: plain_scalar
+  regex: "drizzle-kit push|db-push|db:push"
+---
+id: no-drizzle-push-in-ci-block
+message: "CI migrates the blank database with make db-migrate, never drizzle-kit push."
+severity: error
+language: Yaml
+files:
+  - ".github/**"
+rule:
+  kind: block_scalar
+  regex: "drizzle-kit push|db-push|db:push"
