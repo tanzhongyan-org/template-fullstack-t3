@@ -12,7 +12,7 @@ jobs:
     # The template has no production database; derived repos set ENABLE_DEPLOY,
     # the bucket, and the secrets below when they take the deploy path.
     if: ${{ vars.ENABLE_DEPLOY == 'true' }}
-    uses: tanzhongyan-org/.github/.github/workflows/backup.yml@0c54f703d2d0d24b6ec61c8ea0f0d1a7d220f3e9 # fleet pin 2026-10-29
+    uses: tanzhongyan-org/.github/.github/workflows/backup.yml@33bb193f8f32e5b3f715c9e1dff6e36667d8e70d # fleet pin 2026-10-29
     with:
       bucket: s3://example-template-db-backups/db-backups
       aws-region: ap-southeast-1

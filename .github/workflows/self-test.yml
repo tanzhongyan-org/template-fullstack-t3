@@ -48,7 +48,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up the toolchain
-        uses: tanzhongyan-org/.github/.github/actions/setup@0c54f703d2d0d24b6ec61c8ea0f0d1a7d220f3e9 # fleet pin 2026-10-29
+        uses: tanzhongyan-org/.github/.github/actions/setup@33bb193f8f32e5b3f715c9e1dff6e36667d8e70d # fleet pin 2026-10-29
         with:
           runtime: t3
           playwright: "true"
