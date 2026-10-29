@@ -11,32 +11,20 @@ const root = join(import.meta.dirname, "..");
 const modulesDir = join(root, "node_modules");
 
 /**
- * Weak-copyleft packages the owner explicitly allows: [name, reason].
- * Dev-only tools are exempt by policy and need no entry here.
+ * Weak-copyleft packages the owner explicitly allows: [name-or-pattern, reason].
+ * Dev-only tools are exempt by policy and need no entry here. sharp ships one
+ * package per platform plus libvips builds, so the family matches by prefix.
  */
 const EXCEPTIONS = [
   [
-    "@img/sharp-win32-x64",
+    "@img/sharp-",
     "Next.js image optimizer; libvips stays LGPL because it is dynamically linked, never statically",
   ],
-  [
-    "@img/sharp-linux-x64",
-    "Next.js image optimizer; libvips stays LGPL because it is dynamically linked, never statically",
-  ],
-  [
-    "@img/sharp-linux-arm64",
-    "Next.js image optimizer; libvips stays LGPL because it is dynamically linked, never statically",
-  ],
-  [
-    "@img/sharp-darwin-x64",
-    "Next.js image optimizer; libvips stays LGPL because it is dynamically linked, never statically",
-  ],
-  [
-    "@img/sharp-darwin-arm64",
-    "Next.js image optimizer; libvips stays LGPL because it is dynamically linked, never statically",
-  ],
-  ["sharp", "Next.js image optimizer; see the @img/sharp platform notes above"],
+  ["sharp", "Next.js image optimizer; see the @img/sharp family note above"],
 ];
+
+const allowedException = (name) =>
+  EXCEPTIONS.find(([key]) => (key.endsWith("-") ? name.startsWith(key) : name === key));
 
 const FAIL = [/(?<!L)GPL/i, /\bSSPL\b/i, /EUPL/i, /CC-BY-SA/i, /Commons Clause/i];
 const WARN = [/\bLGPL\b/i, /\bMPL\b/i, /\bEPL\b/i];
@@ -104,7 +92,7 @@ for (const pkg of packages) {
   } else if (pkg.license.startsWith("UNKNOWN")) {
     failures.push(`${pkg.name}@${pkg.version}: no recognizable license`);
   } else if (WARN.some((re) => re.test(pkg.license))) {
-    const allowed = EXCEPTIONS.find(([name]) => name === pkg.name);
+    const allowed = allowedException(pkg.name);
     if (allowed)
       warnings.push(`${pkg.name}@${pkg.version}: ${pkg.license} (exception: ${allowed[1]})`);
     else failures.push(`${pkg.name}@${pkg.version}: ${pkg.license} needs an owner exception`);
