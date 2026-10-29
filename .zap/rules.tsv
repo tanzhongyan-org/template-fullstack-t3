@@ -1,0 +1,8 @@
+# ZAP baseline tuning for the weekly DAST gate (fail_action fails on ANY alert).
+# Format: <pluginId><TAB><IGNORE|INFO|WARN|FAIL><TAB><scope><TAB><owner reason>
+# Each IGNORE below is a scanner artifact or an accepted risk, never a finding
+# we have not read. Re-check this file when the ZAP version pin changes.
+10019	IGNORE	*	Framework 308 on /api/ carries no body, so there is no content to type.
+10049	IGNORE	*	Spider sends no-cache request headers; static pages carry s-maxage and APIs correctly no-store.
+10055	IGNORE	*	script-src allowlist needs Next.js nonce plumbing for the inline bootstrap (follow-up); frame-ancestors, base-uri, form-action, and object-src are already locked down.
+90004	IGNORE	*	No COEP: the site needs no cross-origin isolation, and require-corp would break third-party analytics and fonts.
