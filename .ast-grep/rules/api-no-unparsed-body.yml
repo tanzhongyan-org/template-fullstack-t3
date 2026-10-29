@@ -1,0 +1,11 @@
+id: no-unparsed-body
+message: "Read route bodies through parseJsonBody / readRawBody in ~/server/api/parse, never req.json(), req.text() or formData()."
+severity: error
+language: TypeScript
+files:
+  - "src/app/**/route.ts"
+rule:
+  any:
+    - pattern: "$REQ.json()"
+    - pattern: "$REQ.text()"
+    - pattern: "$REQ.formData()"

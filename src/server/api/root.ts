@@ -1,4 +1,6 @@
+import { feedbackRouter } from "~/features/feedback/server/router";
 import { notesRouter } from "~/features/notes/server/router";
+import { waitlistRouter } from "~/features/waitlist/server/router";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -9,6 +11,8 @@ import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
  */
 export const appRouter = createTRPCRouter({
   notes: notesRouter,
+  waitlist: waitlistRouter,
+  feedback: feedbackRouter,
 });
 
 // export type definition of API

@@ -1,0 +1,12 @@
+id: no-raw-capture
+valid:
+  - 'await track({ event: "activated" });'
+  - 'await trackServer({ event: "activated" });'
+invalid:
+  - 'posthog.capture({ distinctId: "u", event: "x" });'
+---
+id: no-raw-capture-tsx
+valid:
+  - 'await track({ event: "activated" });'
+invalid:
+  - 'client.capture("x");'

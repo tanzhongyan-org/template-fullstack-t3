@@ -1,0 +1,12 @@
+id: no-unstable-cache
+valid:
+  - "import { cacheTag } from 'next/cache';"
+invalid:
+  - "import { unstable_cache } from 'next/cache';"
+  - "export const revalidate = 60;"
+---
+id: no-unstable-cache-tsx
+valid:
+  - "const el = <div />;"
+invalid:
+  - "export const revalidate = 60;"

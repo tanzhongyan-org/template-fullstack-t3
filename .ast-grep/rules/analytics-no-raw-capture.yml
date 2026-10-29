@@ -1,0 +1,17 @@
+id: no-raw-capture
+message: "Send analytics through the taxonomy (track/trackServer), never a raw capture call."
+severity: error
+language: TypeScript
+ignores:
+  - "src/server/analytics.ts"
+rule:
+  pattern: "$CLIENT.capture($$$)"
+---
+id: no-raw-capture-tsx
+message: "Send analytics through the taxonomy (track/trackServer), never a raw capture call."
+severity: error
+language: Tsx
+ignores:
+  - "src/server/analytics.ts"
+rule:
+  pattern: "$CLIENT.capture($$$)"

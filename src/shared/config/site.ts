@@ -99,6 +99,8 @@ export const site = {
       },
     ] satisfies LegalSection[],
   },
+  // TEMPLATE-BRAND(owner): the owner address for budget alerts and the digest.
+  ownerEmail: "owner@example.com",
   metrics: {
     /** Kill date from EXPERIENCE.md ## Brief; the digest counts down to it. */
     killDate: null as string | null,
