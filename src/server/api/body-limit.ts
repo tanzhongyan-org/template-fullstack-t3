@@ -22,5 +22,9 @@ export async function limitBody(req: Request, maxBytes = MAX_BODY_BYTES): Promis
     }
     chunks.push(value);
   }
-  return new Request(req, { body: new Blob(chunks as BlobPart[]) });
+  return new Request(req.url, {
+    method: req.method,
+    headers: req.headers,
+    body: new Blob(chunks as BlobPart[]),
+  });
 }

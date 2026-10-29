@@ -1,3 +1,4 @@
+import { exampleRouter } from "~/features/_example/server/router";
 import { feedbackRouter } from "~/features/feedback/server/router";
 import { notesRouter } from "~/features/notes/server/router";
 import { waitlistRouter } from "~/features/waitlist/server/router";
@@ -13,6 +14,7 @@ export const appRouter = createTRPCRouter({
   notes: notesRouter,
   waitlist: waitlistRouter,
   feedback: feedbackRouter,
+  example: exampleRouter,
 });
 
 // export type definition of API

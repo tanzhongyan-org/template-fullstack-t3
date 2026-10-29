@@ -1,0 +1,16 @@
+[
+  { "id": "greeting", "prompt": "hello", "mustContain": "hello" },
+  { "id": "question", "prompt": "what is this?", "mustContain": "what is this?" },
+  { "id": "long", "prompt": "lorem ipsum dolor sit amet", "mustContain": "lorem ipsum" },
+  { "id": "numbers", "prompt": "count to 3", "mustContain": "count to 3" },
+  { "id": "empty-ish", "prompt": "?", "mustContain": "?" },
+  { "id": "unicode", "prompt": "héllo wörld", "mustContain": "héllo" },
+  { "id": "code", "prompt": "print(1 + 1)", "mustContain": "print(1 + 1)" },
+  { "id": "multiline", "prompt": "line one", "mustContain": "line one" },
+  { "id": "email", "prompt": "write a subject", "mustContain": "subject" },
+  {
+    "id": "truncation",
+    "prompt": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "mustContain": "Example answer to"
+  }
+]
