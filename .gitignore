@@ -7,6 +7,13 @@
 
 # testing
 /coverage
+/preview-checks
+/storybook-static
+/test-results
+/playwright-report
+
+# logs
+*.log
 
 # database
 

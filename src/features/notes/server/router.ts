@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq } from "drizzle-orm";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { contentValues } from "~/server/db/owned";
 import { notes } from "~/server/db/schema";
 import { createNoteSchema, noteIdSchema, updateNoteSchema } from "../schemas/note";
 
@@ -34,13 +35,9 @@ export const notesRouter = createTRPCRouter({
   }),
 
   update: protectedProcedure.input(updateNoteSchema).mutation(async ({ ctx, input }) => {
-    const values: { title?: string; body?: string } = {};
-    if (input.title !== undefined) values.title = input.title;
-    if (input.body !== undefined) values.body = input.body;
-
     const [updated] = await ctx.db
       .update(notes)
-      .set(values)
+      .set(contentValues(input))
       .where(and(eq(notes.id, input.id), eq(notes.ownerId, ctx.ownerId)))
       .returning();
     if (!updated) throw noteNotFound();

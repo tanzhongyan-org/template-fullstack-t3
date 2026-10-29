@@ -4,6 +4,7 @@ severity: error
 language: TypeScript
 ignores:
   - "src/shared/config/env.js"
+  - "playwright.config.ts"
 rule:
   any:
     - pattern: process.env.$VAR

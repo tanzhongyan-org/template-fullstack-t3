@@ -5,7 +5,7 @@
     "minTokens": 50,
     "minLines": 10,
     "minOccurrences": 2,
-    "ignore": ["**/*.test.*", "**/*.spec.*"]
+    "ignore": ["**/*.test.*", "**/*.spec.*", "src/styles/generated/**"]
   },
   "health": {
     "maxCyclomatic": 15,

@@ -9,12 +9,14 @@ This is the only agent instruction file. Claude Code, Codex, Cursor, Copilot and
 - Next.js 16 (App Router), React 19, TypeScript strict, Bun
 - PostgreSQL with Drizzle ORM; tRPC 11; Tailwind CSS 4 with shadcn/ui
 - Environment validation: `@t3-oss/env-nextjs` in `src/shared/config/env.js`
-- Tests: Vitest, colocated `*.test.ts`
+- Tests: Vitest, colocated `*.test.ts`; Playwright smoke, crawler and axe in `e2e/`
+- Brand tokens in `packages/shared/tokens.ts`, analytics taxonomy in `packages/shared/analytics.ts`
 
 ## 2. Where things go
 
 - Follow the Code map in `ARCHITECTURE.md`; reuse listed helpers before writing new ones.
-- A feature lives in `src/features/<name>/` with components, server, schemas folders and an `index.ts`.
+- A feature lives in `src/features/<name>/` with components, server, schemas folders and an `index.ts`. Scaffold one with `make new-feature name=<name>`; never copy `_example` by hand.
+- Colors come from `packages/shared/tokens.ts` via `make tokens`; analytics events go through `track` or `trackServer` only.
 - Nest new code freely inside existing top-level directories. A new top-level directory needs a `layout.allow` entry in `scripts/repo-policy.json`; record the reason in `docs/decisions/` if it changes the architecture.
 - New dependencies need a row in `docs/dependencies.md` and a trigger from `docs/decisions/0003-frontend-dependency-policy.md`.
 

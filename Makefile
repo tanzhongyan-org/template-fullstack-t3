@@ -1,5 +1,7 @@
 .PHONY: setup dev test lint fix typecheck verify check build audit policy template-debt fmt \
-	anti-slop knip dupes db-generate db-push db-migrate
+	anti-slop knip dupes db-generate db-push db-migrate tokens contrast brand-check \
+	licenses security restore-drill seed new-feature e2e crawl a11y lighthouse static-routes \
+	evals stories stories-build
 
 BIN := node_modules/.bin
 
@@ -50,11 +52,63 @@ audit:
 template-debt:
 	@git grep -n "TEMPLATE-TODO(" -- . ':(exclude)Makefile' ':(exclude).ast-grep' || true
 
+# Brand and theme gates.
+tokens:
+	bun scripts/generate-tokens.ts
+
+contrast:
+	bun scripts/check-contrast.ts
+
+brand-check:
+	node scripts/brand-check.mjs
+
+# Ops gates.
+licenses:
+	node scripts/licenses.mjs
+
+security:
+	node scripts/security.mjs
+
+restore-drill:
+	node scripts/restore-drill.mjs
+
+# One-shot aids.
+seed:
+	bun scripts/seed.ts
+
+new-feature:
+	node scripts/new-feature.mjs --name=$(name)
+
+evals:
+	$(BIN)/vitest run evals
+
+stories:
+	bun run storybook
+
+stories-build:
+	bun run build-storybook
+
+# Preview checks, run against PREVIEW_URL (or a local server).
+e2e:
+	node scripts/playwright-run.mjs smoke
+
+crawl:
+	node scripts/playwright-run.mjs crawl
+
+a11y:
+	node scripts/playwright-run.mjs a11y
+
+lighthouse:
+	node scripts/lighthouse.mjs
+
+static-routes: build
+	node scripts/static-routes.mjs
+
 # Fast gate for hooks: no database, no build.
-verify: typecheck lint anti-slop policy
+verify: typecheck lint anti-slop policy tokens contrast brand-check
 
 # Full gate set used by CI. Tests need DATABASE_URL and a migrated database.
-check: typecheck lint test build knip dupes anti-slop policy
+check: typecheck lint test build knip dupes anti-slop policy tokens contrast brand-check
 
 db-generate:
 	bun run db:generate

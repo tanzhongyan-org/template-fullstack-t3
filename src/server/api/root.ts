@@ -5,6 +5,7 @@ import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
  * This is the primary router for your server.
  *
  * Each feature router in src/features/<x>/server/router.ts is added here.
+ * `make new-feature` registers new routers in this map.
  */
 export const appRouter = createTRPCRouter({
   notes: notesRouter,

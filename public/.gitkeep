@@ -1,0 +1,2 @@
+# Static assets live here. Brand icons are generated routes (src/app/icon.tsx), so this
+# directory ships empty; the Dockerfile COPY below needs it to exist.

@@ -6,8 +6,12 @@
       ".claude",
       ".gemini",
       ".github",
+      ".storybook",
       "docs",
       "drizzle",
+      "e2e",
+      "evals",
+      "packages",
       "public",
       "scripts",
       "src"
@@ -42,11 +46,7 @@
           "pattern": "image:\\s*postgres:(\\S+)"
         },
         {
-          "file": ".github/workflows/ci.yml",
-          "pattern": "image:\\s*postgres:(\\S+)"
-        },
-        {
-          "file": ".github/workflows/dast.yml",
+          "file": "docker-compose.prod.yml",
           "pattern": "image:\\s*postgres:(\\S+)"
         }
       ]
