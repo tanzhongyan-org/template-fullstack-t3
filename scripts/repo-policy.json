@@ -28,7 +28,7 @@
     ]
   },
   "docs": {
-    "exclude": ["docs/plans/**", "docs/specs/**", "docs/archive/**", ".agents/**"],
+    "exclude": ["docs/plans/**", "docs/specs/**", "docs/archive/**", ".agents/**", ".worktrees/**"],
     "externalPrefixes": ["workflow/", "shared/"],
     "ignorePaths": [".next", ".env", "node_modules", "bun.lock", "next-env.d.ts"],
     "envExample": ".env.example",

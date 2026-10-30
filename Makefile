@@ -13,7 +13,7 @@ dev:
 	bun run dev
 
 test:
-	bun run test
+	bun run test --coverage
 
 # Formats one file; the agent post-edit hook calls this with FILE set.
 fmt:
