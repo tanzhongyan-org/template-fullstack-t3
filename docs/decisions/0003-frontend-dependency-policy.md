@@ -38,6 +38,6 @@ shadcn primitives stay app-owned in `src/shared/components/ui`. Features compose
 
 ## Consequences
 
-- A pull request that adds a library cites a trigger from the table, or amends this ADR with a new row.
+- A pull request that adds a library cites a trigger from the table, or records in docs/dependencies.md why the default was not enough.
 - The ledger shows what each library replaced, so removals are easy to find.
 - Splitting into packages is deferred, so the template carries no workspace configuration.

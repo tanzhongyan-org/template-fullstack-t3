@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
-  "ignorePatterns": ["**/.next/**", "**/dist/**", "**/node_modules/**"],
+  "ignorePatterns": ["**/.next/**", "**/dist/**", "**/node_modules/**", "**/.worktrees/**"],
   "duplicates": {
     "minTokens": 50,
     "minLines": 10,

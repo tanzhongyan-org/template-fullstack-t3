@@ -40,6 +40,7 @@ Every direct dependency in `package.json` has one row. Add the row in the same p
 | `@types/react-dom`     | React DOM types                                             | React DOM ships no types                                            | Nothing                |
 | `@biomejs/biome`       | Format and lint (Gate 2)                                    | One tool replaces a formatter plus a linter                         | ESLint and Prettier    |
 | `vitest`               | Test runner (Gate 3)                                        | `bun test` lacks the Vite transform and alias handling the app uses | Nothing                |
+| `@vitest/coverage-v8`  | Coverage floor for `make test`                              | Vitest has no built-in coverage provider                            | Nothing                |
 | `knip`                 | Dead code detection (Gate 4)                                | `tsc` does not report unused files or exports                       | Nothing                |
 | `fallow`               | Duplicate code detection (Gate 5)                           | No built-in clone detector                                          | Nothing                |
 | `@ast-grep/cli`        | Anti-slop and import boundary rules (Gate 6)                | Biome cannot express path-scoped import rules                       | Nothing                |

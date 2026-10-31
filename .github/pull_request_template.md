@@ -19,6 +19,7 @@
 ## Checklist
 
 - [ ] Tests cover the new behaviour at the entry point (tRPC procedure or route).
+- [ ] Coverage: >=90% of changed lines, or a one-line justified exception.
 - [ ] Docs are updated in this pull request (`ARCHITECTURE.md`, README, ADR).
 - [ ] No new dependency without a row in `docs/dependencies.md`.
 - [ ] Any new top-level directory is in `layout.allow` in `scripts/repo-policy.json`.
