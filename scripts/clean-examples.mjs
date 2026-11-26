@@ -52,6 +52,7 @@ const editFile = (rel, transform) => {
 
 removePath("src/features/_example", { recursive: true });
 removePath("src/app/examples", { recursive: true });
+removePath(".next/types", { recursive: true });
 
 editFile("src/server/api/root.ts", (text) =>
   text

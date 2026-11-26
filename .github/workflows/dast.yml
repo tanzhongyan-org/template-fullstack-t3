@@ -21,7 +21,7 @@ jobs:
       install-command: bun install --frozen-lockfile
       db-setup-command: make db-migrate
       build-command: bun run build
-      start-command: bun run start
+      start-command: TRUST_IDENTITY_HEADER=false bun run start
       # No identity replacer: replacer.full_list(0) with REQ_HEADER injects a
       # malformed empty-name ": <value>" header under ZAP 2.17.0 (packet
       # captured), and strict parsers answer every request 400. The baseline
