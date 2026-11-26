@@ -63,10 +63,10 @@ try {
     "-d",
     scratch,
     "-tAc",
-    "select count(*) from notes; select count(*) from webhook_events;",
+    "select count(*) from feedback; select count(*) from webhook_events;",
   ]);
   console.log(
-    `restore-drill: restored counts (notes, webhook_events): ${counts.trim().split("\n").join(", ")}`,
+    `restore-drill: restored counts (feedback, webhook_events): ${counts.trim().split("\n").join(", ")}`,
   );
 } finally {
   execFileSync(

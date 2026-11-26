@@ -87,9 +87,9 @@ jobs:
       - name: Scaffold a probe feature and gate it
         shell: bash
         run: |
-          make new-feature name=selftestprobe
+          make new-feature name=self-test-probe
           make verify
-          bun run test src/features/selftestprobe
-          rm -rf src/features/selftestprobe src/app/selftestprobe
+          bun run test src/features/self-test-probe
+          rm -rf src/features/self-test-probe src/app/self-test-probe
           git checkout -- src/server/api/root.ts
-          test -z "$(git status --porcelain src/features src/app | grep selftestprobe || true)"
+          test -z "$(git status --porcelain src/features src/app | grep self-test-probe || true)"

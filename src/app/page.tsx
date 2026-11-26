@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { WaitlistForm } from "~/features/waitlist";
 import { buttonVariants } from "~/shared/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "~/shared/components/ui/card";
 import { site } from "~/shared/config/site";
@@ -36,9 +35,6 @@ export default function Home() {
           <Link href="/examples" className={buttonVariants({ variant: "default" })}>
             See the example
           </Link>
-          <Link href="/notes" className={buttonVariants({ variant: "outline" })}>
-            Try the demo
-          </Link>
         </div>
       </section>
 
@@ -51,10 +47,6 @@ export default function Home() {
             </CardHeader>
           </Card>
         ))}
-      </section>
-
-      <section aria-label="Waitlist" className="flex w-full justify-center">
-        <WaitlistForm />
       </section>
     </main>
   );

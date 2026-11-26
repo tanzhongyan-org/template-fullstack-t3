@@ -6,7 +6,7 @@
  */
 
 import { db } from "../src/server/db";
-import { budget, examples, feedback, notes, usageEvent, waitlist } from "../src/server/db/schema";
+import { examples, feedback } from "../src/server/db/schema";
 import { assertLocalDev } from "../src/shared/config/dev-guard";
 
 assertLocalDev();
@@ -30,19 +30,16 @@ const pick = <T>(items: T[]): T => {
 };
 
 const tenants = ["acme-alice", "globex-bob"];
-const noteTitles = ["Launch checklist", "Meeting notes", "Ideas", "Reading list"];
+const titles = ["Launch checklist", "Onboarding flow", "Pricing tiers", "API tokens"];
 
 for (const ownerId of tenants) {
-  for (const title of noteTitles.slice(0, 2)) {
-    await db
-      .insert(notes)
-      .values({ ownerId, title: `${title} (${ownerId})`, body: "Seeded demo content." });
+  for (const title of titles.slice(0, 2)) {
+    await db.insert(examples).values({
+      ownerId,
+      title: `${title} (${ownerId})`,
+      body: "Seeded example slice row.",
+    });
   }
-  await db.insert(examples).values({
-    ownerId,
-    title: pick(noteTitles),
-    body: "Seeded example slice row.",
-  });
   await db.insert(feedback).values({
     ownerId,
     kind: pick(["idea", "praise", "bug"]),
@@ -52,22 +49,5 @@ for (const ownerId of tenants) {
   });
 }
 
-await db.insert(waitlist).values({ email: "seeded@example.com" }).onConflictDoNothing();
-
-const period = new Date().toISOString().slice(0, 7);
-for (const provider of ["openai", "resend"]) {
-  await db
-    .insert(budget)
-    .values({ provider, monthlyLimitMinor: 5_000, currency: "USD", period })
-    .onConflictDoNothing();
-  await db.insert(usageEvent).values({
-    feature: "seed",
-    provider,
-    units: 10,
-    costMinor: 120,
-    currency: "USD",
-  });
-}
-
-console.log(`seed: 2 tenants, sample notes, examples, feedback, waitlist, budgets (${period})`);
+console.log("seed: 2 tenants, sample examples and feedback seeded");
 process.exit(0);

@@ -72,7 +72,6 @@ for (const rel of [
   "src/app/sitemap.ts",
   "src/app/robots.ts",
   "src/styles/generated/tokens.css",
-  "src/styles/generated/tokens.uniwind.css",
   ".storybook/main.ts",
   ".storybook/preview.tsx",
 ]) {

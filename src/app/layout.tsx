@@ -2,11 +2,12 @@ import "~/styles/globals.css";
 
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import { FeedbackDialog } from "~/features/feedback";
+import { AnalyticsProvider } from "~/shared/components/analytics-provider";
 import { SiteFooter } from "~/shared/components/site-footer";
 import { SiteHeader } from "~/shared/components/site-header";
 import { ThemeProvider } from "~/shared/components/theme-provider";
 import { Toaster } from "~/shared/components/ui/sonner";
-import { VitalsReporter } from "~/shared/components/vitals-reporter";
 import { site } from "~/shared/config/site";
 import { TRPCReactProvider } from "~/trpc/react";
 
@@ -35,11 +36,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="flex min-h-screen flex-col">
         <ThemeProvider>
           <TRPCReactProvider>
-            <SiteHeader />
-            <div className="flex-1">{children}</div>
-            <SiteFooter />
-            <Toaster />
-            <VitalsReporter />
+            <AnalyticsProvider>
+              <SiteHeader />
+              <div className="flex-1">{children}</div>
+              <SiteFooter action={<FeedbackDialog />} />
+              <Toaster />
+            </AnalyticsProvider>
           </TRPCReactProvider>
         </ThemeProvider>
       </body>

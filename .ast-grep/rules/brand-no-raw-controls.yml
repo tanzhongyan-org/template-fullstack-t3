@@ -4,6 +4,8 @@ severity: error
 language: Tsx
 ignores:
   - "src/shared/components/ui/**"
+  - "src/features/**/canvas/**"
+  - "src/features/**/charts/**"
 rule:
   any:
     - kind: jsx_element

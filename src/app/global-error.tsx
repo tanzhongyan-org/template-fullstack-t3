@@ -3,6 +3,7 @@
 import { Button } from "~/shared/components/ui/button";
 
 export default function GlobalError({
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
@@ -14,6 +15,9 @@ export default function GlobalError({
         <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
           <h1 className="text-3xl font-bold tracking-tight">Something went wrong</h1>
           <p className="text-muted-foreground">Reload the page to try again.</p>
+          {error.digest ? (
+            <p className="font-mono text-xs text-muted-foreground">Reference: {error.digest}</p>
+          ) : null}
           <Button onClick={() => reset()}>Try again</Button>
         </main>
       </body>

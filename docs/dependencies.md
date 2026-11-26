@@ -27,7 +27,6 @@ Every direct dependency in `package.json` has one row. Add the row in the same p
 | `tw-animate-css`           | Animation utilities that shadcn components expect           | Tailwind has no enter and exit animation classes                                                                  | Nothing                           |
 | `next-themes`              | Class-based theme provider with system detection            | A hand-rolled toggle flashes the wrong theme and fights hydration                                                 | Hand-rolled theme state           |
 | `posthog-node`             | Server-side analytics capture for the taxonomy              | Client capture is blocked by ad blockers, dropping money and signup events                                        | `fetch` to PostHog                |
-| `web-vitals`               | Core Web Vitals measurement for RUM events                  | Hand-rolled observers miss the attribution the library computes                                                   | Nothing                           |
 | `sonner`                   | Toast notifications through the shadcn Toaster              | The template needs one toast system; ad-hoc alerts do not stack or dismiss                                        | `alert()` calls                   |
 
 ## Development dependencies

@@ -14,7 +14,13 @@ export async function parseJsonBody<T>(
   if (!limited) {
     return Response.json({ error: "Request body too large" }, { status: 413 });
   }
-  const parsed = schema.safeParse(await limited.json());
+  let raw: unknown;
+  try {
+    raw = await limited.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  const parsed = schema.safeParse(raw);
   if (!parsed.success) {
     return Response.json({ error: "Invalid request body" }, { status: 400 });
   }

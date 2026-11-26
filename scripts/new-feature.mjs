@@ -2,9 +2,9 @@
 // Scaffold a gate-clean feature slice from src/features/_example.
 // Usage: make new-feature name=widget
 //
-// Copies the slice, renames identifiers, registers the router in
-// src/server/api/root.ts, and scaffolds src/app/<name>/ pages so every gate
-// passes without further edits.
+// Copies the slice, renames identifiers (camelCase for TS/tRPC identifiers,
+// kebab-case for paths/files), registers the router in src/server/api/root.ts,
+// and scaffolds src/app/<name>/ pages so every gate passes without further edits.
 
 import {
   cpSync,
@@ -34,8 +34,10 @@ if (name === "_example" || name === "example") {
 
 const pascal = name
   .split("-")
-  .map((part) => part[0]?.toUpperCase() + part.slice(1))
+  .map((part) => (part[0]?.toUpperCase() ?? "") + part.slice(1))
   .join("");
+const camel = (pascal[0]?.toLowerCase() ?? "") + pascal.slice(1);
+
 const target = join(root, "src", "features", name);
 if (existsSync(target)) {
   console.error(`src/features/${name} already exists.`);
@@ -76,22 +78,14 @@ const replacements = [
   ["ExampleManager", `${pascal}Manager`],
   ["ExampleList", `${pascal}List`],
   ["ExampleForm", `${pascal}Form`],
-  ["exampleRouter", `${name}Router`],
-  ["exampleCreatedEmail", `${name}CreatedEmail`],
+  ["ExampleItem", `${pascal}Item`],
+  ["exampleRouter", `${camel}Router`],
+  ["exampleCreatedEmail", `${camel}CreatedEmail`],
   ["createExampleSchema", `create${pascal}Schema`],
   ["updateExampleSchema", `update${pascal}Schema`],
-  ["exampleIdSchema", `${name}IdSchema`],
-  ["askExampleSchema", `ask${pascal}Schema`],
-  ["example-ai", `${name}-ai`],
-  ["example.list", `${name}.list`],
-  ["example.create", `${name}.create`],
-  ["example.get", `${name}.get`],
-  ["example.delete", `${name}.delete`],
-  ["example.askAi", `${name}.askAi`],
-  ["example.invalidate", `${name}.invalidate`],
-  ["utils.example", `utils.${name}`],
-  ["api.example", `api.${name}`],
-  ["Example/example", `${pascal}/${pascal}`],
+  ["exampleIdSchema", `${camel}IdSchema`],
+  ["exampleNotFound", `${camel}NotFound`],
+  [".example.", `.${camel}.`],
   ["Example/Form", `${pascal}/Form`],
   ["Example/List", `${pascal}/List`],
   ["example-", `${name}-`],
@@ -102,15 +96,12 @@ const replacements = [
   ["../schemas/example", `../schemas/${name}`],
   ['"example"', `"${name}"`],
   ["'example'", `'${name}'`],
-  ["example:", `${name}:`],
-  ["example-alice", `${name}-alice`],
-  ["example-bob", `${name}-bob`],
-  ["example-ai-owner", `${name}-ai-owner`],
-  ["Example answer to", `${pascal} answer to`],
   ["the example", `the ${name}`],
   ["New example", `New ${name}`],
   ["Create example", `Create ${name}`],
   ["No examples yet", `No ${name}s yet`],
+  ["Example not found", `${pascal} not found`],
+  ["Failed to create example", `Failed to create ${name}`],
 ];
 for (const file of collect(target)) rewrite(file, replacements);
 
@@ -130,11 +121,11 @@ if (!rootText.includes(importAnchor)) {
 }
 rootText = rootText.replace(
   importAnchor,
-  `${importAnchor}\nimport { ${name}Router } from "~/features/${name}/server/router";`,
+  `${importAnchor}\nimport { ${camel}Router } from "~/features/${name}/server/router";`,
 );
 rootText = rootText.replace(
   "  example: exampleRouter,\n",
-  `  example: exampleRouter,\n  ${name}: ${name}Router,\n`,
+  `  example: exampleRouter,\n  ${camel}: ${camel}Router,\n`,
 );
 writeFileSync(rootFile, rootText);
 
@@ -143,7 +134,9 @@ const appDir = join(root, "src", "app", name);
 mkdirSync(appDir, { recursive: true });
 const pageReplacements = [
   ...replacements,
-  ["ExampleManager", `${pascal}Manager`],
+  ["ExamplesPage", `${pascal}Page`],
+  ["ExamplesLoading", `${pascal}Loading`],
+  ["ExamplesError", `${pascal}Error`],
   ["~/features/_example", `~/features/${name}`],
   ["Examples failed to load", `${pascal}s failed to load`],
   ["Examples", `${pascal}s`],

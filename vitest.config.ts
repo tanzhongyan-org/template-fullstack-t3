@@ -17,6 +17,24 @@ export default defineConfig({
       CRON_SECRET: "test-cron-secret",
       STRIPE_WEBHOOK_SECRET: "whsec_test_secret",
     },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "unit",
+          include: ["**/*.test.ts", "**/*.test.tsx"],
+          exclude: ["**/*.db.test.*", "e2e/**", "node_modules/**", ".next/**", ".worktrees/**"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "db",
+          include: ["**/*.db.test.ts", "**/*.db.test.tsx"],
+          exclude: ["e2e/**", "node_modules/**", ".next/**", ".worktrees/**"],
+        },
+      },
+    ],
   },
   resolve: {
     alias: {

@@ -1,40 +1,44 @@
-# Fullstack T3 Agent Guidelines (L1 Extension)
+# Repository Engineering Guide
 
-Inherits: Universal L0 Invariants (workflow/AGENTS.md).
-Do not repeat global workflow rules here. The code map and invariants are in `ARCHITECTURE.md`.
-This is the only agent instruction file. Claude Code, Codex, Cursor, Copilot and Gemini read it. Do not add CLAUDE.md, GEMINI.md or other per-tool copies: Claude Code ignores this file once a CLAUDE.md exists. `make policy` rejects them.
+This is the single agent instruction file for the repository. Cursor, Claude Code, Codex, Copilot, and Gemini all read it. Do not add CLAUDE.md, GEMINI.md, .cursorrules, or .github/copilot-instructions.md; `make policy` rejects them. Keep personal editor workflows out of the repository.
 
-## 1. Project Technology Stack
+## Stack
 
 - Next.js 16 (App Router), React 19, TypeScript strict, Bun
-- PostgreSQL with Drizzle ORM; tRPC 11; Tailwind CSS 4 with shadcn/ui
-- Environment validation: `@t3-oss/env-nextjs` in `src/shared/config/env.js`
-- Tests: Vitest, colocated `*.test.ts`; Playwright smoke, crawler and axe in `e2e/`
-- Brand tokens in `packages/shared/tokens.ts`, analytics taxonomy in `packages/shared/analytics.ts`
+- PostgreSQL with Drizzle ORM; tRPC 11; Tailwind CSS 4 with shadcn/ui (Base UI)
+- Environment validation (`@t3-oss/env-nextjs`): `src/shared/config/env.js`
+- Auth session boundary: `src/server/auth/index.ts` (`protectedProcedure` and `adminProcedure`)
+- Payment gateway interface: `src/server/payments/`
+- Tests: Vitest (`*.test.ts` unit, `*.db.test.ts` Postgres), Playwright (`e2e/`), Storybook (`.storybook/`)
+- Brand tokens: `packages/shared/tokens.ts`; Analytics taxonomy: `packages/shared/analytics.ts`
 
-## 2. Where things go
+## Architecture & Conventions
 
-- Follow the Code map in `ARCHITECTURE.md`; reuse listed helpers before writing new ones.
-- A feature lives in `src/features/<name>/` with components, server, schemas folders and an `index.ts`. Scaffold one with `make new-feature name=<name>`; never copy `_example` by hand.
-- Colors come from `packages/shared/tokens.ts` via `make tokens`; analytics events go through `track` or `trackServer` only.
-- Nest new code freely inside existing top-level directories. A new top-level directory needs a `layout.allow` entry in `scripts/repo-policy.json`; record the reason in `docs/decisions/` if it changes the architecture.
-- New dependencies need a row in `docs/dependencies.md` and a trigger from `docs/decisions/0003-frontend-dependency-policy.md`.
+- Read the full code map and request flow in `ARCHITECTURE.md` before writing new modules.
+- Group product code into vertical slices under `src/features/<name>/` (components, schemas, server, and index.ts). Scaffold new features with `make new-feature name=<kebab-case>`; never copy `src/features/_example/` by hand. Remove the starter demo once ready with `make clean-examples`.
+- Follow layer boundaries enforced by `make anti-slop`:
+  - Read env vars only via `{ env }` from `~/shared/config/env`.
+  - `"use client"` files never import `~/server/**` or `server-only`; call procedures through `~/trpc/react` (or `~/trpc/server` in RSC).
+  - Features import other features only via `~/features/<name>`; `src/shared/**` never imports `~/features/**`.
+  - Route handlers parse inputs with `parseJsonBody` or `readRawBody` from `~/server/api/parse`.
+  - Log JSON lines via `src/server/log.ts`; never call `console.log`/`console.info`/`console.debug` in app code.
+  - Store money as integer minor units (`amountMinor`, `d.integer()`); never use floats.
+  - Use tokens from `packages/shared/tokens.ts` (`make tokens`) and primitives from `src/shared/components/ui/`.
+- Filter every user-owned query and mutation by `ctx.ownerId`, or gate privileged views with `adminProcedure`. Prove tenant isolation with tests.
+- Run `make db-generate` after changing `src/server/db/schema.ts`. `make db-check` fails on unmigrated schema drift.
+- Add new top-level folders only via `scripts/repo-policy.json`, and log every direct dependency in `docs/dependencies.md` (with rationale in `docs/decisions/0003-frontend-dependency-policy.md`).
 
-## 3. Data Access & Invariants
+## Verification Gates
 
-- Read configuration only via `{ env }` from `"~/shared/config/env"` [enforced by ast-grep].
-- Procedures use `protectedProcedure` and filter by `ctx.ownerId` [review-only; tenant tests].
-- Client components fetch via `api` from `"~/trpc/react"`; server components via `"~/trpc/server"` [review-only].
-- Identity is a stub; mark changes with `TEMPLATE-TODO(auth)` until real authentication replaces it.
-- After editing `schema.ts` run `make db-generate`.
+Run `make doctor` on first setup, `make verify` while working, and `make check` before merging:
 
-## 4. Verification Gates
+1. `make typecheck` — strict TypeScript check
+2. `make lint` — Biome formatting/lint + markdownlint
+3. `make test-unit` (in `make verify`) / `make test` (in `make check`) — Vitest unit and DB tests with coverage
+4. `make build` — Next.js production build
+5. `make knip` & `make dupes` — unused code and copy-paste detection
+6. `make anti-slop` & `make policy` — ast-grep architectural boundaries, docs integrity, and dependency ledger
+7. `make tokens`, `make contrast`, `make brand-check` — design tokens, WCAG 2.2 AA contrast, brand wiring
+8. `make db-check` — Drizzle snapshot and schema drift verification
 
-Run `make verify` while working and `make check` before you finish.
-
-1. Gate 1 (Typecheck): `make typecheck`
-2. Gate 2 (Lint & Format): `make lint`
-3. Gate 3 (Tests & Build): `make test` and `make build`
-4. Gate 4 (Dead Code): `make knip`
-5. Gate 5 (Duplication): `make dupes` (fallow)
-6. Gate 6 (Anti-Slop): `make anti-slop`
+See `docs/recipes/` for opt-in auth providers, global payment adapters, observability/replay, AI metering crons, and waitlists.

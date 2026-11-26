@@ -5,11 +5,10 @@ test("landing renders the brand", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle(/Example/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Example");
-  await expect(page.getByText("No notes yet")).toHaveCount(0);
   await expect(page.getByText("Create T3 App")).toHaveCount(0);
 });
 
-test("landing links to the example and demo pages", async ({ page }) => {
+test("landing links to the example page", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "See the example" }).click();
   await expect(page).toHaveURL(/\/examples/);
@@ -29,20 +28,14 @@ test("terms and refund pages render", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Refund Policy");
 });
 
-test("health answers ok", async ({ request }) => {
+test("health answers ok with x-request-id", async ({ request }) => {
   const response = await request.get("/api/health");
   expect(response.ok()).toBe(true);
+  expect(response.headers()["x-request-id"]).toBeTruthy();
   await expect(response.json()).resolves.toMatchObject({ ok: true });
 });
 
 test("unknown routes render the 404 page", async ({ page }) => {
   await page.goto("/no-such-page");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Page not found");
-});
-
-test("waitlist form submits", async ({ page }) => {
-  await page.goto("/");
-  await page.getByLabel("Email address").fill(`smoke-${Date.now()}@example.com`);
-  await page.getByRole("button", { name: "Join the waitlist" }).click();
-  await expect(page.getByRole("status")).toContainText("on the list");
 });

@@ -14,8 +14,6 @@ const ownedTable = <TName extends string>(name: TName) =>
     (t) => [index(`${name}_owner_idx`).on(t.ownerId)],
   );
 
-export const notes = ownedTable("notes");
-
 /** Template example slice for `make new-feature`. Derived features add their own tables. */
 export const examples = ownedTable("examples");
 
@@ -34,34 +32,7 @@ export const webhookEvents = pgTable(
   (t) => [unique("webhook_events_provider_event_uniq").on(t.provider, t.eventId)],
 );
 
-/** One row per paid call (AI, SMS, email): the cost ledger. Money is integer minor units. */
-export const usageEvent = pgTable(
-  "usage_event",
-  (d) => ({
-    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    feature: d.varchar("feature", { length: 128 }).notNull(),
-    provider: d.varchar("provider", { length: 128 }).notNull(),
-    units: d.integer("units").notNull(),
-    costMinor: d.integer("cost_minor").notNull(),
-    currency: d.varchar("currency", { length: 3 }).notNull().default("USD"),
-    createdAt: d.timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  }),
-  (t) => [index("usage_event_provider_created_idx").on(t.provider, t.createdAt)],
-);
-
-/** Monthly spend cap per provider; the budget cron emails the owner at 80% and 100%. */
-export const budget = pgTable("budget", (d) => ({
-  id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-  provider: d.varchar("provider", { length: 128 }).notNull().unique(),
-  monthlyLimitMinor: d.integer("monthly_limit_minor").notNull(),
-  currency: d.varchar("currency", { length: 3 }).notNull().default("USD"),
-  /** YYYY-MM the alert flags below belong to; a new month resets them. */
-  period: d.varchar("period", { length: 7 }).notNull(),
-  alert80Sent: d.boolean("alert_80_sent").notNull().default(false),
-  alert100Sent: d.boolean("alert_100_sent").notNull().default(false),
-}));
-
-/** User feedback and NPS answers; the digest summarizes them for the owner. */
+/** User feedback submitted from the in-app FeedbackDialog. */
 export const feedback = pgTable(
   "feedback",
   (d) => ({
@@ -75,10 +46,3 @@ export const feedback = pgTable(
   }),
   (t) => [index("feedback_owner_idx").on(t.ownerId)],
 );
-
-/** Landing-page waitlist: one row per email. */
-export const waitlist = pgTable("waitlist", (d) => ({
-  id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-  email: d.varchar("email", { length: 320 }).notNull().unique(),
-  createdAt: d.timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-}));

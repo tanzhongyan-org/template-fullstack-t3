@@ -2,12 +2,12 @@
  * Brand color tokens: the single source of truth for every color in the product.
  *
  * Each token holds a light and a dark value as an `oklch()` color. `make tokens`
- * generates the web stylesheet and the Uniwind stylesheet from this file; never
- * edit the generated files by hand. `make contrast` fails any text pair below
- * WCAG 2.2 AA in either theme.
+ * generates `src/styles/generated/tokens.css` from this file; never edit the
+ * generated file by hand. `make contrast` fails any text pair below WCAG 2.2 AA
+ * in either theme.
  *
- * TEMPLATE-BRAND(colors): replace these neutral values with the palette from
- * DESIGN.md, then run `make tokens` and `make contrast`.
+ * TEMPLATE-BRAND(colors): replace these neutral values with your brand palette,
+ * then run `make tokens` and `make contrast`.
  */
 export interface ThemeValues {
   light: string;

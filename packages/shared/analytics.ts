@@ -1,26 +1,49 @@
 /**
  * Event taxonomy: the only analytics events the product may send. Client code
- * calls track(), which posts to /api/analytics; the server validates against
- * these schemas and forwards to PostHog. Autocapture stays off: nothing is
- * recorded except the events below. Money, signup and AI events always run
- * server-side via trackServer() so blockers cannot drop them.
+ * calls track(), which posts client-safe events to /api/analytics; the server
+ * validates, derives distinctId server-side, rate-limits, and forwards to PostHog.
+ * Money, signup, payment, and AI events belong to serverAnalyticsEvents and
+ * must run server-side via trackServer() so browsers cannot forge or drop them.
  */
 import { z } from "zod";
 
-export const analyticsEvents = z.enum([
-  "signup_completed",
+/** Events a browser client is permitted to emit via /api/analytics. */
+export const clientAnalyticsEvents = z.enum([
   "activated",
-  "subscription_started",
-  "subscription_cancelled",
-  "ai_response",
-  "ai_feedback",
-  "waitlist_joined",
-  "web_vital",
+  "feature_used",
+  "feedback_submitted",
+  "cta_clicked",
 ]);
 
+/** Server-only events (auth, payments, AI) rejected at the public client endpoint. */
+export const serverAnalyticsEvents = z.enum([
+  "signup_completed",
+  "subscription_started",
+  "subscription_cancelled",
+  "payment_refunded",
+  "payment_disputed",
+  "ai_response",
+  "ai_feedback",
+]);
+
+/** Full product event taxonomy across client and server. */
+export const analyticsEvents = z.enum([
+  ...clientAnalyticsEvents.options,
+  ...serverAnalyticsEvents.options,
+]);
+
+export type ClientAnalyticsEvent = z.infer<typeof clientAnalyticsEvents>;
+export type ServerAnalyticsEvent = z.infer<typeof serverAnalyticsEvents>;
 export type AnalyticsEvent = z.infer<typeof analyticsEvents>;
 
-const baseProperties = z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]));
+const baseProperties = z
+  .record(z.string().max(64), z.union([z.string().max(500), z.number(), z.boolean()]))
+  .refine((obj) => Object.keys(obj).length <= 20, "Too many properties");
+
+export const clientAnalyticsPayloadSchema = z.object({
+  event: clientAnalyticsEvents,
+  properties: baseProperties.optional(),
+});
 
 export const analyticsPayloadSchema = z.object({
   event: analyticsEvents,
@@ -28,6 +51,7 @@ export const analyticsPayloadSchema = z.object({
   properties: baseProperties.optional(),
 });
 
+export type ClientAnalyticsPayload = z.infer<typeof clientAnalyticsPayloadSchema>;
 export type AnalyticsPayload = z.infer<typeof analyticsPayloadSchema>;
 
 export interface TrackResult {
@@ -35,11 +59,11 @@ export interface TrackResult {
 }
 
 /**
- * Client-safe: posts the event to /api/analytics, which validates and forwards
- * it. Import this from components, never the PostHog SDK.
+ * Client-safe: posts a client-allowed event to /api/analytics, which derives
+ * identity server-side and forwards via trackServer().
  */
-export async function track(input: AnalyticsPayload): Promise<TrackResult> {
-  const parsed = analyticsPayloadSchema.safeParse(input);
+export async function track(input: ClientAnalyticsPayload): Promise<TrackResult> {
+  const parsed = clientAnalyticsPayloadSchema.safeParse(input);
   if (!parsed.success) return { tracked: false };
   const response = await fetch("/api/analytics", {
     method: "POST",

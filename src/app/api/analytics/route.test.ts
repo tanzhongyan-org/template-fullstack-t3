@@ -1,44 +1,115 @@
-import { analyticsEvents } from "@repo/shared/analytics";
-import { describe, expect, it } from "vitest";
-import { trackServer } from "~/server/analytics";
-import { POST } from "./route";
+import {
+  analyticsEvents,
+  clientAnalyticsEvents,
+  serverAnalyticsEvents,
+} from "@repo/shared/analytics";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { __setAnalyticsAdapterForTests, getFeatureFlag, trackServer } from "~/server/analytics";
+import { __resetAnalyticsRateLimitForTests, POST } from "./route";
 
-const post = (body: unknown) =>
+const post = (body: unknown, headers: Record<string, string> = {}) =>
   POST(
     new Request("http://localhost/api/analytics", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      headers: { "Content-Type": "application/json", ...headers },
+      body: typeof body === "string" ? body : JSON.stringify(body),
     }),
   );
 
 describe("analytics route", () => {
-  it("covers the base taxonomy events", () => {
+  afterEach(() => {
+    __setAnalyticsAdapterForTests(null);
+    __resetAnalyticsRateLimitForTests();
+  });
+
+  it("splits client and server taxonomy events cleanly", () => {
+    for (const event of ["activated", "feature_used", "feedback_submitted", "cta_clicked"]) {
+      expect(clientAnalyticsEvents.options).toContain(event);
+      expect(analyticsEvents.options).toContain(event);
+    }
     for (const event of [
       "signup_completed",
-      "activated",
       "subscription_started",
       "subscription_cancelled",
+      "payment_refunded",
+      "payment_disputed",
       "ai_response",
       "ai_feedback",
     ]) {
+      expect(serverAnalyticsEvents.options).toContain(event);
+      expect(clientAnalyticsEvents.options).not.toContain(event);
       expect(analyticsEvents.options).toContain(event);
     }
   });
 
-  it("accepts a taxonomy event without a key (no-op)", async () => {
+  it("accepts a client taxonomy event without a key (dormant no-op)", async () => {
     const response = await post({ event: "activated", properties: { plan: "free" } });
     expect(response.status).toBe(200);
+    expect(response.headers.get("x-request-id")).toBeTruthy();
     expect(await response.json()).toEqual({ tracked: false });
   });
 
-  it("rejects an unknown event", async () => {
-    const response = await post({ event: "made_up", properties: {} });
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ error: "Invalid request body" });
+  it("rejects server-only events posted from clients", async () => {
+    for (const event of ["subscription_started", "signup_completed", "payment_refunded"]) {
+      const response = await post({ event, properties: {} });
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({ error: "Invalid request body" });
+    }
   });
 
-  it("trackServer drops invalid payloads without a key", async () => {
+  it("rejects an unknown event and malformed JSON", async () => {
+    const unknownRes = await post({ event: "made_up", properties: {} });
+    expect(unknownRes.status).toBe(400);
+
+    const badJsonRes = await post("{not-json");
+    expect(badJsonRes.status).toBe(400);
+    expect(await badJsonRes.json()).toEqual({ error: "Invalid JSON" });
+  });
+
+  it("derives distinctId server-side and ignores forged client distinctId", async () => {
+    const captured: Array<{ event: string; distinctId: string }> = [];
+    __setAnalyticsAdapterForTests({
+      async capture(payload) {
+        captured.push({ event: payload.event, distinctId: payload.distinctId });
+      },
+      async getFeatureFlag() {
+        return "variant-a";
+      },
+    });
+
+    const anonRes = await post({ event: "activated", distinctId: "forged-admin" });
+    expect(anonRes.status).toBe(200);
+    expect(await anonRes.json()).toEqual({ tracked: true });
+
+    const authedRes = await post(
+      { event: "feature_used", distinctId: "forged-other" },
+      { "x-user-id": "real-user" },
+    );
+    expect(authedRes.status).toBe(200);
+
+    expect(captured).toEqual([
+      { event: "activated", distinctId: "anonymous" },
+      { event: "feature_used", distinctId: "real-user" },
+    ]);
+    await expect(getFeatureFlag("checkout-test", "real-user")).resolves.toBe("variant-a");
+  });
+
+  it("rate-limits excessive requests per client IP", async () => {
+    const infoSpy = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    try {
+      for (let i = 0; i < 60; i++) {
+        const res = await post({ event: "activated" }, { "x-forwarded-for": "198.51.100.42" });
+        expect(res.status).toBe(200);
+      }
+      const blocked = await post({ event: "activated" }, { "x-forwarded-for": "198.51.100.42" });
+      expect(blocked.status).toBe(429);
+      expect(blocked.headers.get("Retry-After")).toBeTruthy();
+    } finally {
+      infoSpy.mockRestore();
+    }
+  });
+
+  it("trackServer drops events without a key", async () => {
     await expect(trackServer({ event: "activated" })).resolves.toEqual({ tracked: false });
   });
 });

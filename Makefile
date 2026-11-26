@@ -1,7 +1,7 @@
-.PHONY: setup dev test lint fix typecheck verify check build audit policy template-debt fmt \
-	anti-slop knip dupes db-generate db-push db-migrate tokens contrast brand-check \
-	licenses security restore-drill seed new-feature e2e crawl a11y lighthouse static-routes \
-	evals stories stories-build
+.PHONY: setup dev test test-unit lint fix typecheck verify check build audit policy template-debt fmt \
+	anti-slop knip dupes db-generate db-push db-migrate db-check tokens contrast brand-check \
+	licenses security restore-drill seed new-feature clean-examples doctor \
+	e2e crawl a11y lighthouse static-routes stories stories-build
 
 BIN := node_modules/.bin
 
@@ -14,6 +14,9 @@ dev:
 
 test:
 	bun run test --coverage
+
+test-unit:
+	bun run test:unit
 
 # Formats one file; the agent post-edit hook calls this with FILE set.
 fmt:
@@ -34,7 +37,7 @@ build:
 
 # Entry files come from the package.json "knip" field; SKIP_ENV_VALIDATION keeps config loading free of a database URL.
 knip:
-	SKIP_ENV_VALIDATION=1 $(BIN)/knip
+	node scripts/run-env.mjs SKIP_ENV_VALIDATION=1 -- knip
 
 dupes:
 	$(BIN)/fallow dupes --quiet --no-fragments
@@ -73,14 +76,17 @@ restore-drill:
 	node scripts/restore-drill.mjs
 
 # One-shot aids.
+doctor:
+	node scripts/doctor.mjs
+
 seed:
 	bun scripts/seed.ts
 
 new-feature:
 	node scripts/new-feature.mjs --name=$(name)
 
-evals:
-	$(BIN)/vitest run evals
+clean-examples:
+	node scripts/clean-examples.mjs
 
 stories:
 	bun run storybook
@@ -105,10 +111,10 @@ static-routes: build
 	node scripts/static-routes.mjs
 
 # Fast gate for hooks: no database, no build.
-verify: typecheck lint anti-slop policy tokens contrast brand-check
+verify: typecheck lint test-unit anti-slop policy tokens contrast brand-check db-check
 
 # Full gate set used by CI. Tests need DATABASE_URL and a migrated database.
-check: typecheck lint test build knip dupes anti-slop policy tokens contrast brand-check
+check: typecheck lint test build knip dupes anti-slop policy tokens contrast brand-check db-check
 
 db-generate:
 	bun run db:generate
@@ -118,3 +124,6 @@ db-push:
 
 db-migrate:
 	bun run db:migrate
+
+db-check:
+	node scripts/check-migrations.mjs
