@@ -87,7 +87,49 @@ describe("stripe payment provider", () => {
       now,
     );
     expect(dispute.ok).toBe(true);
-    if (dispute.ok) expect(dispute.event.type).toBe("payment.disputed");
+    if (dispute.ok) {
+      expect(dispute.event.type).toBe("payment.disputed");
+      expect(dispute.event.customerId).toBeNull();
+      expect(dispute.event.amountMinor).toBe(2500);
+      expect(dispute.event.currency).toBe("EUR");
+    }
+  });
+
+  it("rejects non-integer amounts, negative amounts, and missing currency on money events", () => {
+    const now = 1_700_000_000;
+    const badPayloads = [
+      {
+        id: "evt_float",
+        type: "checkout.session.completed",
+        data: { object: { amount_total: 19.99, currency: "usd" } },
+      },
+      {
+        id: "evt_neg",
+        type: "charge.refunded",
+        data: { object: { amount_refunded: -10, currency: "usd" } },
+      },
+      {
+        id: "evt_str",
+        type: "charge.dispute.created",
+        data: { object: { amount: "100", currency: "usd" } },
+      },
+      {
+        id: "evt_missing_currency",
+        type: "checkout.session.completed",
+        data: { object: { amount_total: 500 } },
+      },
+    ];
+
+    for (const payload of badPayloads) {
+      const body = JSON.stringify(payload);
+      expect(
+        stripeProvider.verifyWebhook(
+          body,
+          new Headers({ "stripe-signature": `t=${now},v1=${signAt(body, now)}` }),
+          now,
+        ),
+      ).toMatchObject({ ok: false, status: 400 });
+    }
   });
 
   it("rejects missing header, bad signature, and timestamps outside 5-minute tolerance", () => {

@@ -67,4 +67,30 @@ describe("auth session boundary", () => {
       /TRUST_IDENTITY_HEADER must be false/,
     );
   });
+
+  it("allows Next production build without VERCEL_ENV, but still blocks Vercel production builds", async () => {
+    vi.resetModules();
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("TRUST_IDENTITY_HEADER", "true");
+    vi.stubEnv("NEXT_BUILDING", "1");
+    await expect(import("~/shared/config/env")).resolves.toBeDefined();
+
+    vi.resetModules();
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("TRUST_IDENTITY_HEADER", "true");
+    vi.stubEnv("NEXT_BUILDING", "1");
+    await expect(import("~/shared/config/env")).rejects.toThrow(
+      /TRUST_IDENTITY_HEADER must be false/,
+    );
+  });
+
+  it("keeps TRUST_IDENTITY_HEADER=false inert even when SKIP_ENV_VALIDATION=1", async () => {
+    const { getServerSession } = await loadAuth({
+      SKIP_ENV_VALIDATION: "1",
+      NODE_ENV: "production",
+      TRUST_IDENTITY_HEADER: "false",
+    });
+    await expect(getServerSession(new Headers({ "x-user-id": "alice" }))).resolves.toBeNull();
+  });
 });

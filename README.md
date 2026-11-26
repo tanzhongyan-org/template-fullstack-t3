@@ -49,7 +49,7 @@ make dev
 2. Run `make template-debt` to view every `TEMPLATE-TODO` marker you need to resolve.
 3. Run `make brand-check` to inspect `TEMPLATE-BRAND` slots (name, URLs, legal copy, colors).
 4. Once you scaffold your own features with `make new-feature name=<kebab-case>`, run `make clean-examples` followed by `make db-generate` to strip the starter `_example` slice.
-5. Check `docs/recipes/` to plug in Better Auth / Supabase Auth, additional global payment providers, AI metering crons, or a pre-launch waitlist. Need to skip Storybook or payments on a project? Remove `.storybook/` + `src/**/*.stories.tsx` or `src/server/payments/` + `src/app/api/webhooks/` cleanly.
+5. Check `docs/recipes/` (including [mobile-tokens](docs/recipes/mobile-tokens.md)) to plug in Better Auth / Supabase Auth, additional global payment providers, AI metering/evals/crons, Uniwind tokens, or a pre-launch waitlist (and scaffold `notes` or other domain slices via `make new-feature`). Need to skip Storybook or payments on a project? Remove `.storybook/` + `src/**/*.stories.tsx` or `src/server/payments/` + `src/app/api/webhooks/` cleanly.
 
 ## Configuration
 

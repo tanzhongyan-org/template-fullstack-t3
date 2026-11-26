@@ -39,7 +39,7 @@ export const customProvider: PaymentProvider = {
 
 Standard card rails charge a fixed per-transaction fee (for example ~$0.30–$0.50 + ~2.9%–3.4%) which crushes margins on micro-purchases under $5. Two proven ways to protect margins globally:
 
-1. **Prepaid Credit Packs (Gateway-Agnostic):** Sell $10 / $20 / $50 bundles in one checkout, then credit an integer `credit_balance` column inside the `handlePaymentWebhook` Postgres transaction. Individual micro-actions deduct integer credits in Postgres with **$0 gateway fee**.
+1. **Prepaid Credit Packs (Gateway-Agnostic):** Sell $10 / $20 / $50 bundles in one checkout, then pass `{ onEvent: async (tx, event) => { ... } }` to `handlePaymentWebhook` so an integer `credit_balance` column updates inside the Postgres idempotency transaction. Individual micro-actions deduct integer credits in Postgres with **$0 gateway fee**.
 2. **Local Instant Bank / QR Rails:** Support low-fixed-fee local rails behind your `PaymentProvider` adapter where available (PayNow in Singapore, SEPA/iDEAL in Europe, Pix in Brazil, UPI in India, ACH in the US) while keeping the rest of your app code unchanged.
 
 ## Removing Payments Completely

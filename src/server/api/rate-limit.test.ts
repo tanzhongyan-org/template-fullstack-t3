@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { clientIpFrom, createMemoryRateLimiter, rateLimitResponse } from "./rate-limit";
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe("rate limiter", () => {
   it("allows up to limit and rejects the next request until the window expires", () => {
@@ -44,10 +48,70 @@ describe("rate limiter", () => {
     expect(limiter.check("b").allowed).toBe(true);
   });
 
-  it("extracts client IP from proxy headers", () => {
-    expect(clientIpFrom(new Headers({ "x-forwarded-for": "203.0.113.1, 10.0.0.1" }))).toBe(
-      "203.0.113.1",
+  it("extracts client IP safely from XFF right-to-left and ignores spoofed platform headers on self-host", async () => {
+    expect(clientIpFrom(new Headers({ "x-forwarded-for": "198.51.100.42" }))).toBe("198.51.100.42");
+    expect(clientIpFrom(new Headers({ "x-forwarded-for": "1.2.3.4, 203.0.113.10" }))).toBe(
+      "203.0.113.10",
     );
+    expect(
+      clientIpFrom(new Headers({ "x-forwarded-for": "1.2.3.4, 203.0.113.10, 10.0.0.1" }), 2),
+    ).toBe("203.0.113.10");
+
+    // On self-host (VERCEL_ENV unset), spoofed platform headers do not override XFF.
+    expect(
+      clientIpFrom(
+        new Headers({
+          "cf-connecting-ip": "203.0.113.9",
+          "x-vercel-forwarded-for": "203.0.113.8",
+          "x-forwarded-for": "198.51.100.1",
+        }),
+      ),
+    ).toBe("198.51.100.1");
+
+    // Explicit platform opt-in trusts that platform's single-hop header.
+    expect(
+      clientIpFrom(
+        new Headers({
+          "cf-connecting-ip": "203.0.113.9",
+          "x-forwarded-for": "198.51.100.1",
+        }),
+        { trustPlatform: "cloudflare" },
+      ),
+    ).toBe("203.0.113.9");
+    expect(
+      clientIpFrom(
+        new Headers({
+          "x-vercel-forwarded-for": "1.2.3.4, 203.0.113.8",
+          "x-forwarded-for": "198.51.100.1",
+        }),
+        { trustPlatform: "vercel" },
+      ),
+    ).toBe("203.0.113.8");
+    expect(
+      clientIpFrom(
+        new Headers({
+          "x-real-ip": "198.51.100.7",
+          "x-forwarded-for": "198.51.100.1",
+        }),
+        { trustPlatform: "vercel" },
+      ),
+    ).toBe("198.51.100.7");
+
+    // Auto mode enables Vercel headers when VERCEL_ENV is set.
+    vi.resetModules();
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("TRUST_IDENTITY_HEADER", "false");
+    const { clientIpFrom: vercelClientIpFrom } = await import("./rate-limit");
+    expect(
+      vercelClientIpFrom(
+        new Headers({
+          "x-vercel-forwarded-for": "203.0.113.77",
+          "x-forwarded-for": "198.51.100.1",
+        }),
+      ),
+    ).toBe("203.0.113.77");
+
+    // Fallback to x-real-ip only when XFF is absent.
     expect(clientIpFrom(new Headers({ "x-real-ip": "198.51.100.7" }))).toBe("198.51.100.7");
     expect(clientIpFrom(new Headers())).toBe("unknown");
   });

@@ -51,18 +51,25 @@ export function __setAnalyticsAdapterForTests(adapter: AnalyticsAdapter | null):
  * Server-side event capture. Money, signup and AI events must use this so ad
  * blockers cannot drop them. Without POSTHOG_API_KEY it is a dormant no-op.
  */
-export async function trackServer(input: AnalyticsPayload): Promise<{ tracked: boolean }> {
+export async function trackServer(
+  input: AnalyticsPayload & { processPersonProfile?: boolean },
+): Promise<{ tracked: boolean }> {
   const parsed = analyticsPayloadSchema.safeParse(input);
   if (!parsed.success) return { tracked: false };
 
   const activeAdapter = testAdapter ?? (env.POSTHOG_API_KEY ? defaultAdapter : null);
   if (!activeAdapter) return { tracked: false };
 
+  const properties =
+    input.processPersonProfile === false
+      ? { ...parsed.data.properties, $process_person_profile: false }
+      : parsed.data.properties;
+
   try {
     await activeAdapter.capture({
       distinctId: parsed.data.distinctId ?? "server",
       event: parsed.data.event,
-      properties: parsed.data.properties,
+      properties,
     });
     return { tracked: true };
   } catch (error) {

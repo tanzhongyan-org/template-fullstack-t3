@@ -48,4 +48,14 @@ describe("feedback router", () => {
       caller.feedback.submit({ kind: "nps", score: 11, body: "x", page: "/" }),
     ).rejects.toThrow();
   });
+
+  it("rate-limits excessive feedback submissions per caller", async () => {
+    const caller = callerFor(`feedback-ratelimit-${Date.now()}`);
+    for (let i = 0; i < 10; i++) {
+      await caller.feedback.submit({ kind: "idea", body: `item ${i}`, page: "/" });
+    }
+    await expect(
+      caller.feedback.submit({ kind: "idea", body: "over limit", page: "/" }),
+    ).rejects.toMatchObject({ code: "TOO_MANY_REQUESTS" });
+  });
 });

@@ -14,6 +14,7 @@
       "!**/.worktrees",
       "!**/dist",
       "!**/coverage",
+      "!drizzle/meta",
       "!scripts/repo-policy.mjs"
     ]
   },

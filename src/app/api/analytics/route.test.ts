@@ -66,11 +66,19 @@ describe("analytics route", () => {
     expect(await badJsonRes.json()).toEqual({ error: "Invalid JSON" });
   });
 
-  it("derives distinctId server-side and ignores forged client distinctId", async () => {
-    const captured: Array<{ event: string; distinctId: string }> = [];
+  it("derives distinctId server-side per visitor or session and ignores forged client distinctId", async () => {
+    const captured: Array<{
+      event: string;
+      distinctId: string;
+      properties?: Record<string, unknown>;
+    }> = [];
     __setAnalyticsAdapterForTests({
       async capture(payload) {
-        captured.push({ event: payload.event, distinctId: payload.distinctId });
+        captured.push({
+          event: payload.event,
+          distinctId: payload.distinctId,
+          properties: payload.properties,
+        });
       },
       async getFeatureFlag() {
         return "variant-a";
@@ -81,6 +89,17 @@ describe("analytics route", () => {
     expect(anonRes.status).toBe(200);
     expect(await anonRes.json()).toEqual({ tracked: true });
 
+    const setCookie = anonRes.headers.get("set-cookie") ?? "";
+    const match = setCookie.match(/anon_id=(anon_[0-9a-f-]+)/i);
+    expect(match?.[1]).toBeTruthy();
+    const anonId = match?.[1] ?? "";
+    expect(anonId).not.toBe("anonymous");
+    expect(anonId).not.toBe("forged-admin");
+
+    const secondAnonRes = await post({ event: "cta_clicked" }, { cookie: `anon_id=${anonId}` });
+    expect(secondAnonRes.status).toBe(200);
+    expect(secondAnonRes.headers.get("set-cookie")).toBeNull();
+
     const authedRes = await post(
       { event: "feature_used", distinctId: "forged-other" },
       { "x-user-id": "real-user" },
@@ -88,8 +107,17 @@ describe("analytics route", () => {
     expect(authedRes.status).toBe(200);
 
     expect(captured).toEqual([
-      { event: "activated", distinctId: "anonymous" },
-      { event: "feature_used", distinctId: "real-user" },
+      {
+        event: "activated",
+        distinctId: anonId,
+        properties: { $process_person_profile: false },
+      },
+      {
+        event: "cta_clicked",
+        distinctId: anonId,
+        properties: { $process_person_profile: false },
+      },
+      { event: "feature_used", distinctId: "real-user", properties: undefined },
     ]);
     await expect(getFeatureFlag("checkout-test", "real-user")).resolves.toBe("variant-a");
   });

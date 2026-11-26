@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveDbOptions } from "./options";
+import { resolveDbOptions, sanitizeDbUrl } from "./options";
 
 describe("database client options", () => {
   it("keeps prepared statements enabled for direct local Postgres", () => {
@@ -51,7 +51,7 @@ describe("database client options", () => {
     ).toMatchObject({ prepare: false, max: 10 });
   });
 
-  it("honours explicit prepareStatements and maxConnections overrides", () => {
+  it("honours explicit prepareStatements (including string booleans under SKIP_ENV_VALIDATION) and maxConnections overrides", () => {
     expect(
       resolveDbOptions({
         url: "postgresql://postgres:pw@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres",
@@ -61,5 +61,34 @@ describe("database client options", () => {
         platform: "linux",
       }),
     ).toMatchObject({ prepare: true, max: 20 });
+
+    expect(
+      resolveDbOptions({
+        url: "postgresql://postgres:pw@localhost:5432/postgres",
+        prepareStatements: "false",
+        nodeEnv: "production",
+        platform: "linux",
+      }),
+    ).toMatchObject({ prepare: false });
+
+    expect(
+      resolveDbOptions({
+        url: "postgresql://postgres:pw@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres",
+        prepareStatements: "true",
+        nodeEnv: "production",
+        platform: "linux",
+      }),
+    ).toMatchObject({ prepare: true });
+  });
+
+  it("strips pgbouncer query parameter while preserving sslmode and other options", () => {
+    expect(
+      sanitizeDbUrl(
+        "postgresql://postgres:pw@db.example.com:5432/postgres?pgbouncer=true&sslmode=require",
+      ),
+    ).toBe("postgresql://postgres:pw@db.example.com:5432/postgres?sslmode=require");
+    expect(sanitizeDbUrl("postgresql://postgres:pw@localhost:5432/postgres?sslmode=disable")).toBe(
+      "postgresql://postgres:pw@localhost:5432/postgres?sslmode=disable",
+    );
   });
 });

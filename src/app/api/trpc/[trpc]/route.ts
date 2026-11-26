@@ -1,5 +1,5 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import type { NextRequest } from "next/server";
+import { after, type NextRequest } from "next/server";
 import { limitBody, MAX_BODY_BYTES } from "~/server/api/body-limit";
 import { appRouter } from "~/server/api/root";
 import { createTRPCContext } from "~/server/api/trpc";
@@ -50,7 +50,12 @@ const handler = async (incoming: NextRequest) => {
         });
       }
       if (error.code === "INTERNAL_SERVER_ERROR") {
-        void reportServerError(error, { requestId: id, path: path ?? undefined });
+        const report = () => reportServerError(error, { requestId: id, path: path ?? undefined });
+        try {
+          after(report);
+        } catch {
+          void report();
+        }
       }
     },
   });

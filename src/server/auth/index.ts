@@ -1,4 +1,4 @@
-import { env } from "~/shared/config/env";
+import { env, isEnvTrue } from "~/shared/config/env";
 
 export type UserRole = "user" | "admin";
 
@@ -22,7 +22,7 @@ const parseAdminIds = (raw: string | undefined): Set<string> =>
  * real session auth (see docs/recipes/auth-providers.md).
  */
 export async function getServerSession(headers: Headers): Promise<SessionUser | null> {
-  if (!env.TRUST_IDENTITY_HEADER) return null;
+  if (!isEnvTrue(env.TRUST_IDENTITY_HEADER)) return null;
   const id = headers.get("x-user-id")?.trim();
   if (!id) return null;
 

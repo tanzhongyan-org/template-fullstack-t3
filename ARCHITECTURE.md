@@ -33,7 +33,7 @@ Reuse these modules before writing new helpers.
 | `src/features/<name>/schemas/`                      | Zod input schemas                               | Share one schema between router and client forms                                                           |
 | `src/features/<name>/index.ts`                      | Public client-safe exports                      | Other code imports `~/features/<name>`, never deep paths                                                   |
 | `src/server/auth/index.ts`                          | Isolated session & role resolver                | Swap `getServerSession` here for Better Auth or Supabase Auth                                              |
-| `src/server/api/trpc.ts`                            | Context, timing middleware, procedures          | `publicProcedure`, `protectedProcedure`, `adminProcedure`, `createRateLimitedProcedure`                    |
+| `src/server/api/trpc.ts`                            | Context, timing middleware, procedures          | `publicProcedure`, `protectedProcedure`, `adminProcedure`, `rateLimit`                                     |
 | `src/server/api/root.ts`                            | Aggregates feature routers                      | One entry per feature slice                                                                                |
 | `src/server/api/rate-limit.ts`                      | Bounded sliding-window rate limiter             | `createMemoryRateLimiter`, `clientIpFrom`, `rateLimitResponse`                                             |
 | `src/server/api/body-limit.ts`                      | 1 MB request body cap                           | `limitBody`                                                                                                |
@@ -69,7 +69,7 @@ Reuse these modules before writing new helpers.
 - Features import other features only via `~/features/<name>`. [enforced by ast-grep]
 - `"use client"` files never import `~/server/**` or `server-only`. [enforced by ast-grep]
 - Pages and layouts never import `~/server/db`. [enforced by ast-grep]
-- Raw hex colors and raw form controls are banned outside UI primitives, generated tokens, `canvas/**`, and `charts/**`. [enforced by ast-grep]
+- Raw hex colors and raw form controls are banned outside UI primitives and generated tokens. [enforced by ast-grep]
 - Route bodies go through `parseJsonBody` or `readRawBody`. [enforced by ast-grep]
 - Money columns use `d.integer()` minor units; analytics uses taxonomy helpers; console logging lives only in `src/server/log.ts` and `src/server/email.ts`. [enforced by ast-grep]
 - User-owned queries filter by `ctx.ownerId`; admin views require `adminProcedure`. [enforced by DB tests & review]

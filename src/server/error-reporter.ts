@@ -20,6 +20,13 @@ export type ErrorReporterTransport = (request: {
   body: string;
 }) => Promise<void>;
 
+interface SentryStackFrame {
+  filename?: string;
+  function?: string;
+  lineno?: number;
+  colno?: number;
+}
+
 let testTransport: ErrorReporterTransport | null = null;
 
 /** Inject a fake HTTP transport in unit tests; production code never calls this. */
@@ -49,13 +56,67 @@ export function parseSentryDsn(dsn: string): ParsedSentryDsn | null {
   }
 }
 
+function parseStackFrames(stack: string | undefined): SentryStackFrame[] {
+  if (!stack) return [];
+  const frames: SentryStackFrame[] = [];
+  for (const line of stack.split("\n").slice(1)) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("at ")) continue;
+    const withFn = trimmed.match(/^at\s+(.+?)\s+\((.+?):(\d+):(\d+)\)$/);
+    if (withFn) {
+      frames.push({
+        function: withFn[1],
+        filename: withFn[2],
+        lineno: Number(withFn[3]),
+        colno: Number(withFn[4]),
+      });
+      continue;
+    }
+    const bare = trimmed.match(/^at\s+(.+?):(\d+):(\d+)$/);
+    if (bare) {
+      frames.push({
+        filename: bare[1],
+        lineno: Number(bare[2]),
+        colno: Number(bare[3]),
+      });
+    }
+  }
+  return frames.reverse();
+}
+
+function buildExceptionChain(error: unknown) {
+  const values: Array<{
+    type: string;
+    value: string;
+    stacktrace?: { frames: SentryStackFrame[] };
+  }> = [];
+  let current: unknown = error;
+  const seen = new Set<unknown>();
+  for (let depth = 0; depth < 3 && current !== undefined && current !== null; depth++) {
+    if (seen.has(current)) break;
+    seen.add(current);
+    const err = current instanceof Error ? current : new Error(String(current));
+    const frames = parseStackFrames(err.stack);
+    values.push({
+      type: err.name,
+      value: err.message,
+      ...(frames.length > 0 ? { stacktrace: { frames } } : {}),
+    });
+    current = err.cause;
+  }
+  return values.reverse();
+}
+
 const defaultTransport: ErrorReporterTransport = async ({ url, headers, body }) => {
-  await fetch(url, {
+  const response = await fetch(url, {
     method: "POST",
     headers,
     body,
     signal: AbortSignal.timeout(5_000),
   });
+  if (!response.ok) {
+    throw new Error(`Sentry rejected envelope (${response.status})`);
+  }
 };
 
 /**
@@ -71,7 +132,6 @@ export async function reportServerError(
   const target = parseSentryDsn(dsn);
   if (!target) return { reported: false };
 
-  const err = error instanceof Error ? error : new Error(String(error));
   const eventId = crypto.randomUUID().replaceAll("-", "");
   const sentAt = new Date().toISOString();
   const tags: Record<string, string> = { requestId: context.requestId };
@@ -86,12 +146,7 @@ export async function reportServerError(
     level: "error",
     environment: env.VERCEL_ENV ?? env.NODE_ENV,
     exception: {
-      values: [
-        {
-          type: err.name,
-          value: err.message,
-        },
-      ],
+      values: buildExceptionChain(error),
     },
     tags,
   };

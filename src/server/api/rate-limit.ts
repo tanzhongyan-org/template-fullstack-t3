@@ -1,3 +1,5 @@
+import { env } from "~/shared/config/env";
+
 export interface RateLimitResult {
   allowed: boolean;
   remaining: number;
@@ -80,15 +82,61 @@ export function createMemoryRateLimiter({
   };
 }
 
-/** Extract the caller IP from reverse-proxy headers, falling back cleanly. */
-export function clientIpFrom(headers: Headers): string {
-  const forwarded = headers.get("x-forwarded-for");
-  if (forwarded) {
-    const first = forwarded.split(",")[0]?.trim();
-    if (first) return first;
+export interface ClientIpOptions {
+  /** Number of trusted reverse-proxy hops appending to `x-forwarded-for`. Defaults to 1. */
+  trustedProxyHops?: number;
+  /**
+   * Trusted edge platform whose single-hop IP header may be read:
+   * - `"auto"` (default): trusts `x-vercel-forwarded-for` / `x-real-ip` only when `env.VERCEL_ENV` is set; otherwise reads `x-forwarded-for` from the right.
+   * - `"vercel"`: trusts `x-vercel-forwarded-for` (rightmost) then `x-real-ip`.
+   * - `"cloudflare"`: trusts `cf-connecting-ip`.
+   * - `"none"`: ignores platform headers and reads `x-forwarded-for` from the right (falling back to `x-real-ip` only if XFF is absent).
+   */
+  trustPlatform?: "auto" | "vercel" | "cloudflare" | "none";
+}
+
+const splitHeaderValues = (raw: string | null): string[] =>
+  raw
+    ? raw
+        .split(",")
+        .map((part) => part.trim())
+        .filter(Boolean)
+    : [];
+
+/**
+ * Extract the caller IP from reverse-proxy headers without trusting spoofed
+ * leftmost `x-forwarded-for` entries or unverified edge headers. Self-hosted
+ * deployments behind Nginx/Caddy must ensure the proxy appends the client IP
+ * to `x-forwarded-for` and strips untrusted headers.
+ */
+export function clientIpFrom(headers: Headers, options: number | ClientIpOptions = 1): string {
+  const { trustedProxyHops = 1, trustPlatform = "auto" } =
+    typeof options === "number" ? { trustedProxyHops: options } : options;
+  const platform = trustPlatform === "auto" ? (env.VERCEL_ENV ? "vercel" : "none") : trustPlatform;
+
+  if (platform === "cloudflare") {
+    const cfIp = headers.get("cf-connecting-ip")?.trim();
+    if (cfIp) return cfIp;
   }
-  const realIp = headers.get("x-real-ip")?.trim();
-  return realIp || "unknown";
+
+  if (platform === "vercel") {
+    const vercelParts = splitHeaderValues(headers.get("x-vercel-forwarded-for"));
+    const pickedVercel = vercelParts[vercelParts.length - 1];
+    if (pickedVercel) return pickedVercel;
+
+    const realIp = headers.get("x-real-ip")?.trim();
+    if (realIp) return realIp;
+  }
+
+  const forwardedParts = splitHeaderValues(headers.get("x-forwarded-for"));
+  if (forwardedParts.length > 0) {
+    const hops = Number.isFinite(trustedProxyHops) ? Math.max(1, Math.floor(trustedProxyHops)) : 1;
+    const picked = forwardedParts[Math.max(0, forwardedParts.length - hops)];
+    if (picked) return picked;
+  }
+
+  const realIpFallback = headers.get("x-real-ip")?.trim();
+  return realIpFallback || "unknown";
 }
 
 /** Standard HTTP 429 response carrying Retry-After and the request id. */

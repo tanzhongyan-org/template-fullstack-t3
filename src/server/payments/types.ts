@@ -10,10 +10,10 @@ export interface NormalizedPaymentEvent {
   provider: string;
   type: PaymentEventType;
   rawType: string;
-  customerId: string;
-  /** Integer minor units (e.g. cents); never floating point. */
-  amountMinor: number;
-  currency: string;
+  customerId: string | null;
+  /** Integer minor units (e.g. cents); never floating point. Null on non-money events. */
+  amountMinor: number | null;
+  currency: string | null;
   sessionId?: string;
   payload: Record<string, unknown>;
 }

@@ -43,7 +43,9 @@ describe("error reporter", () => {
       calls.push(req);
     });
 
-    const res = await reportServerError(new Error("boom"), {
+    const rootCause = new Error("root failure");
+    const outerError = new Error("boom", { cause: rootCause });
+    const res = await reportServerError(outerError, {
       requestId: "req-99",
       path: "/api/trpc/example.list",
       method: "GET",
@@ -57,6 +59,31 @@ describe("error reporter", () => {
     expect(calls[0]?.headers["X-Sentry-Auth"]).toContain("sentry_key=pub123");
     expect(calls[0]?.body).toContain('"requestId":"req-99"');
     expect(calls[0]?.body).toContain('"digest":"dig-1"');
+    expect(calls[0]?.body).toContain('"value":"root failure"');
+    expect(calls[0]?.body).toContain('"stacktrace"');
+  });
+
+  it("treats non-2xx Sentry HTTP responses as failed delivery and logs an error", async () => {
+    vi.resetModules();
+    vi.stubEnv("SENTRY_DSN", "https://pub123@o1.ingest.sentry.io/99");
+    const { __setErrorReporterTransportForTests, reportServerError } = await import(
+      "./error-reporter"
+    );
+    __setErrorReporterTransportForTests(null);
+
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response("rate limited", { status: 429 }));
+
+    try {
+      const res = await reportServerError(new Error("boom"), { requestId: "req-429" });
+      expect(res).toEqual({ reported: false });
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      fetchSpy.mockRestore();
+      errorSpy.mockRestore();
+    }
   });
 
   it("swallows transport failures cleanly", async () => {

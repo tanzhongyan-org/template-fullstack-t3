@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "next build",
+    "build": "node scripts/run-env.mjs NEXT_BUILDING=1 -- next build",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
@@ -12,7 +12,7 @@
     "dev": "next dev",
     "dev:setup": "bun run scripts/dev-setup.ts",
     "lint": "biome check .",
-    "preview": "next build && next start",
+    "preview": "bun run build && next start",
     "start": "next start",
     "test": "node scripts/run-env.mjs --dotenv -- vitest run",
     "test:unit": "node scripts/run-env.mjs DATABASE_URL?=postgresql://postgres:password@localhost:5432/unit_test_unused -- vitest run --project=unit",
@@ -100,7 +100,8 @@
       "src/proxy.ts",
       "src/server/cron.ts",
       "src/shared/components/ui/*.tsx",
-      "src/styles/globals.css"
+      "src/styles/globals.css",
+      "src/trpc/server.ts"
     ],
     "project": [
       "src/**/*.{ts,tsx,js,jsx}",

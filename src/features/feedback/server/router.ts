@@ -1,10 +1,14 @@
 import { desc, eq } from "drizzle-orm";
-import { adminProcedure, createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { adminProcedure, createTRPCRouter, protectedProcedure, rateLimit } from "~/server/api/trpc";
 import { feedback } from "~/server/db/schema";
 import { submitFeedbackSchema } from "../schemas/feedback";
 
+const submitFeedbackProcedure = protectedProcedure.use(
+  rateLimit({ limit: 10, windowMs: 60_000, keyPrefix: "feedback.submit" }),
+);
+
 export const feedbackRouter = createTRPCRouter({
-  submit: protectedProcedure.input(submitFeedbackSchema).mutation(async ({ ctx, input }) => {
+  submit: submitFeedbackProcedure.input(submitFeedbackSchema).mutation(async ({ ctx, input }) => {
     const [row] = await ctx.db
       .insert(feedback)
       .values({

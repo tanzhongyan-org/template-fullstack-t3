@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { trackServer } from "~/server/analytics";
 import { readRawBody } from "~/server/api/parse";
 import { db } from "~/server/db";
@@ -5,6 +6,13 @@ import { webhookEvents } from "~/server/db/schema";
 import { logError, logRequest, requestIdFrom } from "~/server/log";
 import { getPaymentProvider } from "./index";
 import type { NormalizedPaymentEvent } from "./types";
+
+export type PaymentWebhookTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+export interface HandlePaymentWebhookOptions {
+  /** Domain work executed inside the idempotency Postgres transaction before commit. */
+  onEvent?: (tx: PaymentWebhookTx, event: NormalizedPaymentEvent) => Promise<void>;
+}
 
 const ANALYTICS_EVENT_BY_TYPE = {
   "checkout.completed": "subscription_started",
@@ -20,15 +28,18 @@ async function applyPostCommitEffects(
   if (event.type === "unhandled") return;
   const analyticsEvent = ANALYTICS_EVENT_BY_TYPE[event.type];
   try {
+    const properties: Record<string, string | number | boolean> = {
+      provider: event.provider,
+    };
+    if (event.amountMinor !== null) properties.amountMinor = event.amountMinor;
+    if (event.currency !== null) properties.currency = event.currency;
+    if (event.sessionId) properties.session = event.sessionId;
+
     await trackServer({
       event: analyticsEvent,
-      distinctId: event.customerId,
-      properties: {
-        provider: event.provider,
-        amountMinor: event.amountMinor,
-        currency: event.currency,
-        ...(event.sessionId ? { session: event.sessionId } : {}),
-      },
+      distinctId: event.customerId ?? `${event.provider}:${event.eventId}`,
+      properties,
+      processPersonProfile: event.customerId !== null,
     });
   } catch (error) {
     logError({
@@ -43,12 +54,14 @@ async function applyPostCommitEffects(
 
 /**
  * Shared provider-agnostic webhook intake: validates provider and signature,
- * dedupes `(provider, eventId)` inside a Postgres transaction, and runs
+ * dedupes `(provider, eventId)` inside a Postgres transaction, executes any
+ * transactional `onEvent` domain hook, marks the row `processed`, and runs
  * external telemetry strictly after commit.
  */
 export async function handlePaymentWebhook(
   request: Request,
   providerName: string,
+  options?: HandlePaymentWebhookOptions,
 ): Promise<Response> {
   const requestId = requestIdFrom(request.headers);
   const provider = getPaymentProvider(providerName);
@@ -96,7 +109,17 @@ export async function handlePaymentWebhook(
       })
       .onConflictDoNothing({ target: [webhookEvents.provider, webhookEvents.eventId] })
       .returning({ id: webhookEvents.id });
-    return inserted.length > 0;
+
+    const row = inserted[0];
+    if (!row) return false;
+
+    if (options?.onEvent) {
+      await options.onEvent(tx, event);
+    }
+
+    await tx.update(webhookEvents).set({ status: "processed" }).where(eq(webhookEvents.id, row.id));
+
+    return true;
   });
 
   if (isFirstDelivery) {

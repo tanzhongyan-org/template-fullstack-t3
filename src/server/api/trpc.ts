@@ -73,16 +73,12 @@ export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 });
 
 /**
- * Create a rate-limited procedure builder keyed by caller id or client IP.
- * @public
+ * Middleware enforcing a sliding-window rate limit keyed by caller id or client IP.
+ * Compose onto `publicProcedure` or `protectedProcedure`: `.use(rateLimit(...))`.
  */
-export function createRateLimitedProcedure(opts: {
-  limit: number;
-  windowMs: number;
-  keyPrefix?: string;
-}) {
+export function rateLimit(opts: { limit: number; windowMs: number; keyPrefix?: string }) {
   const limiter = createMemoryRateLimiter({ limit: opts.limit, windowMs: opts.windowMs });
-  return publicProcedure.use(({ ctx, path, next }) => {
+  return t.middleware(({ ctx, path, next }) => {
     const identity = ctx.ownerId ?? clientIpFrom(ctx.headers);
     const result = limiter.check(`${opts.keyPrefix ?? path}:${identity}`);
     if (!result.allowed) {

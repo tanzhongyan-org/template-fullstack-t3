@@ -90,17 +90,22 @@ export const env = createEnv({
 });
 
 /**
+ * Interpret a boolean env flag safely even when SKIP_ENV_VALIDATION leaves raw strings.
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+export const isEnvTrue = (value) => value === true || value === "true";
+
+/**
  * Fail closed at boot on the server: the header-identity stub must never run in
  * production or preview environments (Docker/self-host or Vercel), and mail
  * needs a sender when it is on.
  */
 if (typeof window === "undefined") {
-  if (
-    env.TRUST_IDENTITY_HEADER &&
-    (env.NODE_ENV === "production" ||
-      env.VERCEL_ENV === "production" ||
-      env.VERCEL_ENV === "preview")
-  ) {
+  const trustHeader = isEnvTrue(env.TRUST_IDENTITY_HEADER);
+  const isVercelProdOrPreview = env.VERCEL_ENV === "production" || env.VERCEL_ENV === "preview";
+  const isRuntimeProd = env.NODE_ENV === "production" && process.env.NEXT_BUILDING !== "1";
+  if (trustHeader && (isVercelProdOrPreview || isRuntimeProd)) {
     throw new Error("TRUST_IDENTITY_HEADER must be false in production and preview environments.");
   }
   if (env.RESEND_API_KEY && !env.EMAIL_FROM) {

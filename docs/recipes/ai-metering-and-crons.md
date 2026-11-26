@@ -69,3 +69,33 @@ Add your route schedule under `vercel.json`:
 ```
 
 Set `CRON_SECRET` in Vercel environment variables (`openssl rand -hex 32`) so Vercel's cron runner authenticates automatically.
+
+## 4. Golden-Case LLM Evals
+
+When you ship an AI workflow, add a deterministic eval suite in Vitest alongside a golden JSON cases fixture so prompt or parser regressions fail `make test-unit`:
+
+```json
+[{ "name": "summarize short note", "input": "Ship v1 today.", "mustInclude": ["v1"] }]
+```
+
+```ts
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+
+interface EvalCase {
+  name: string;
+  input: string;
+  mustInclude: string[];
+}
+
+const cases = JSON.parse(readFileSync("evals/cases.json", "utf8")) as EvalCase[];
+
+describe("AI prompt evals", () => {
+  it.each(cases)("$name", async ({ input, mustInclude }) => {
+    const output = await runYourPrompt(input);
+    for (const expected of mustInclude) {
+      expect(output.toLowerCase()).toContain(expected.toLowerCase());
+    }
+  });
+});
+```

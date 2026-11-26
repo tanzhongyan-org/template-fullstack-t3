@@ -41,4 +41,4 @@ Run `make doctor` on first setup, `make verify` while working, and `make check` 
 7. `make tokens`, `make contrast`, `make brand-check` — design tokens, WCAG 2.2 AA contrast, brand wiring
 8. `make db-check` — Drizzle snapshot and schema drift verification
 
-See `docs/recipes/` for opt-in auth providers, global payment adapters, observability/replay, AI metering crons, and waitlists.
+See `docs/recipes/` for opt-in auth providers, global payment adapters, observability/replay, AI metering/evals/crons, Uniwind mobile tokens, and waitlists.

@@ -1,0 +1,12 @@
+.git
+node_modules
+.next
+.env
+.env.*
+!.env.example
+coverage
+storybook-static
+playwright-report
+test-results
+.drizzle-check-*
+.worktrees

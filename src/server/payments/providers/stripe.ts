@@ -14,33 +14,52 @@ const EVENT_TYPE_MAP: Record<string, PaymentEventType> = {
   "charge.dispute.created": "payment.disputed",
 };
 
+const MONEY_EVENT_TYPES = new Set<PaymentEventType>([
+  "checkout.completed",
+  "payment.refunded",
+  "payment.disputed",
+]);
+
 const normalizeStripeEvent = (parsed: {
   id: string;
   type: string;
   data?: unknown;
-}): NormalizedPaymentEvent => {
+}): { ok: true; event: NormalizedPaymentEvent } | { ok: false; status: 400; reason: string } => {
+  const type: PaymentEventType = EVENT_TYPE_MAP[parsed.type] ?? "unhandled";
   const obj = isRecord(parsed.data) && isRecord(parsed.data.object) ? parsed.data.object : {};
   const customerId =
-    typeof obj.customer === "string" && obj.customer.length > 0 ? obj.customer : "unknown";
+    typeof obj.customer === "string" && obj.customer.length > 0 ? obj.customer : null;
   const rawAmount = obj.amount_total ?? obj.amount_refunded ?? obj.amount;
-  const amountMinor =
-    typeof rawAmount === "number" && Number.isFinite(rawAmount) ? Math.round(rawAmount) : 0;
-  const currency =
-    typeof obj.currency === "string" && obj.currency.length > 0
-      ? obj.currency.toUpperCase()
-      : "USD";
+
+  let amountMinor: number | null = null;
+  let currency: string | null = null;
+
+  if (MONEY_EVENT_TYPES.has(type)) {
+    if (typeof rawAmount !== "number" || !Number.isSafeInteger(rawAmount) || rawAmount < 0) {
+      return { ok: false, status: 400, reason: "Invalid integer minor amount" };
+    }
+    if (typeof obj.currency !== "string" || !/^[a-zA-Z]{3}$/.test(obj.currency)) {
+      return { ok: false, status: 400, reason: "Missing or invalid currency" };
+    }
+    amountMinor = rawAmount;
+    currency = obj.currency.toUpperCase();
+  }
+
   const sessionId = typeof obj.id === "string" && obj.id.length > 0 ? obj.id : undefined;
 
   return {
-    eventId: parsed.id,
-    provider: "stripe",
-    type: EVENT_TYPE_MAP[parsed.type] ?? "unhandled",
-    rawType: parsed.type,
-    customerId,
-    amountMinor,
-    currency,
-    sessionId,
-    payload: parsed as Record<string, unknown>,
+    ok: true,
+    event: {
+      eventId: parsed.id,
+      provider: "stripe",
+      type,
+      rawType: parsed.type,
+      customerId,
+      amountMinor,
+      currency,
+      sessionId,
+      payload: parsed as Record<string, unknown>,
+    },
   };
 };
 
@@ -117,9 +136,6 @@ export const stripeProvider: PaymentProvider = {
       return { ok: false, status: 400, reason: "Invalid event" };
     }
 
-    return {
-      ok: true,
-      event: normalizeStripeEvent({ id: parsed.id, type: parsed.type, data: parsed.data }),
-    };
+    return normalizeStripeEvent({ id: parsed.id, type: parsed.type, data: parsed.data });
   },
 };

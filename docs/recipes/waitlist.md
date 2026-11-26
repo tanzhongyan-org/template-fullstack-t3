@@ -1,6 +1,6 @@
 # Pre-Launch Waitlist Recipe
 
-If you want to capture email signups before launching your product, add a `waitlist` feature slice with optional Cloudflare Turnstile bot protection and `createRateLimitedProcedure`.
+If you want to capture email signups before launching your product, add a `waitlist` feature slice with optional Cloudflare Turnstile bot protection and `rateLimit` middleware.
 
 ## 1. Add the Table
 
@@ -16,19 +16,21 @@ export const waitlist = pgTable("waitlist", (d) => ({
 
 ## 2. Scaffold & Lock Down the Router
 
-Run `make new-feature name=waitlist` or add a router using `createRateLimitedProcedure` for public joins and `adminProcedure` for listing signups (never expose `waitlist` emails to `protectedProcedure`):
+Run `make new-feature name=waitlist` or add a router using `rateLimit` middleware for public joins and `adminProcedure` for listing signups (never expose `waitlist` emails to `protectedProcedure`):
 
 ```ts
 import { count, desc } from "drizzle-orm";
 import { z } from "zod";
-import { adminProcedure, createRateLimitedProcedure, createTRPCRouter } from "~/server/api/trpc";
+import { adminProcedure, createTRPCRouter, publicProcedure, rateLimit } from "~/server/api/trpc";
 import { waitlist } from "~/server/db/schema";
 
-const joinProcedure = createRateLimitedProcedure({
-  limit: 5,
-  windowMs: 60_000,
-  keyPrefix: "waitlist.join",
-});
+const joinProcedure = publicProcedure.use(
+  rateLimit({
+    limit: 5,
+    windowMs: 60_000,
+    keyPrefix: "waitlist.join",
+  }),
+);
 
 export const waitlistRouter = createTRPCRouter({
   join: joinProcedure

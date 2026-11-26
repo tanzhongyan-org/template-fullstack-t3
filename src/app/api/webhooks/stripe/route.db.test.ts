@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { __setAnalyticsAdapterForTests } from "~/server/analytics";
 import { db } from "~/server/db";
 import { webhookEvents } from "~/server/db/schema";
+import { handlePaymentWebhook } from "~/server/payments/webhook";
 import { POST } from "./route";
 
 const sign = (body: string, secret: string, offsetSeconds = 0): string => {
@@ -78,11 +79,51 @@ describe("stripe webhook route", () => {
     expect(second.status).toBe(200);
     await expect(second.json()).resolves.toEqual({ received: true, deduped: true });
 
-    const rows = await db
+    const rows = await db.select().from(webhookEvents).where(eq(webhookEvents.eventId, eventId));
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.status).toBe("processed");
+    expect(tracked).toEqual(["subscription_started:cus_test"]);
+  });
+
+  it("rolls back idempotency row when transactional onEvent fails so retries process cleanly", async () => {
+    const eventId = `evt_rollback_${Date.now()}`;
+    const body = JSON.stringify({
+      id: eventId,
+      type: "checkout.session.completed",
+      data: { object: { customer: "cus_retry", amount_total: 1000, currency: "usd" } },
+    });
+    const makeReq = () =>
+      new Request("http://localhost/api/webhooks/payments/stripe", {
+        method: "POST",
+        headers: { "stripe-signature": sign(body, "whsec_test_secret") },
+        body,
+      });
+
+    await expect(
+      handlePaymentWebhook(makeReq(), "stripe", {
+        onEvent: async () => {
+          throw new Error("domain write failed");
+        },
+      }),
+    ).rejects.toThrow("domain write failed");
+
+    const beforeRetry = await db
       .select({ value: count() })
       .from(webhookEvents)
       .where(eq(webhookEvents.eventId, eventId));
-    expect(rows[0]?.value).toBe(1);
-    expect(tracked).toEqual(["subscription_started:cus_test"]);
+    expect(beforeRetry[0]?.value).toBe(0);
+
+    const retryRes = await handlePaymentWebhook(makeReq(), "stripe", {
+      onEvent: async () => undefined,
+    });
+    expect(retryRes.status).toBe(200);
+    await expect(retryRes.json()).resolves.toEqual({ received: true, deduped: false });
+
+    const afterRetry = await db
+      .select()
+      .from(webhookEvents)
+      .where(eq(webhookEvents.eventId, eventId));
+    expect(afterRetry).toHaveLength(1);
+    expect(afterRetry[0]?.status).toBe("processed");
   });
 });

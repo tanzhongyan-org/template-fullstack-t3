@@ -2,7 +2,7 @@
 
 import Script from "next/script";
 import { createContext, useContext, useState } from "react";
-import { env } from "~/shared/config/env";
+import { env, isEnvTrue } from "~/shared/config/env";
 
 type FlagValue = boolean | string;
 
@@ -19,12 +19,26 @@ declare global {
 
 const FeatureFlagsContext = createContext<Record<string, FlagValue>>({});
 
-const assetsScriptUrl = (apiHost: string): string => {
-  const clean = apiHost.replace(/\/$/, "");
-  if (clean.includes("eu.i.posthog.com")) return "https://eu-assets.i.posthog.com/static/array.js";
-  if (clean.includes("us.i.posthog.com")) return "https://us-assets.i.posthog.com/static/array.js";
-  return `${clean}/static/array.js`;
-};
+/**
+ * Resolve the PostHog browser array.js bundle URL via strict URL hostname
+ * parsing rather than substring checks. Returns null for invalid or non-HTTP URLs.
+ */
+export function resolvePostHogAssetsUrl(apiHost: string): string | null {
+  try {
+    const parsed = new URL(apiHost);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
+    if (parsed.hostname === "eu.i.posthog.com") {
+      return "https://eu-assets.i.posthog.com/static/array.js";
+    }
+    if (parsed.hostname === "us.i.posthog.com") {
+      return "https://us-assets.i.posthog.com/static/array.js";
+    }
+    const basePath = parsed.pathname.replace(/\/+$/, "");
+    return `${parsed.origin}${basePath}/static/array.js`;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Opt-in client observability provider for session replay, heatmaps, and
@@ -35,15 +49,16 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
   const [flags, setFlags] = useState<Record<string, FlagValue>>({});
   const key = env.NEXT_PUBLIC_POSTHOG_KEY;
   const host = env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
+  const scriptSrc = key ? resolvePostHogAssetsUrl(host) : null;
 
-  if (!key) {
+  if (!key || !scriptSrc) {
     return <FeatureFlagsContext.Provider value={flags}>{children}</FeatureFlagsContext.Provider>;
   }
 
   return (
     <FeatureFlagsContext.Provider value={flags}>
       <Script
-        src={assetsScriptUrl(host)}
+        src={scriptSrc}
         strategy="afterInteractive"
         onLoad={() => {
           const client = window.posthog;
@@ -52,12 +67,12 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
             api_host: host,
             autocapture: false,
             capture_pageview: false,
-            disable_session_recording: !env.NEXT_PUBLIC_POSTHOG_REPLAY,
+            disable_session_recording: !isEnvTrue(env.NEXT_PUBLIC_POSTHOG_REPLAY),
             session_recording: {
               maskAllInputs: true,
               maskTextSelector: "[data-private]",
             },
-            enable_heatmaps: env.NEXT_PUBLIC_POSTHOG_HEATMAPS,
+            enable_heatmaps: isEnvTrue(env.NEXT_PUBLIC_POSTHOG_HEATMAPS),
           });
           client.onFeatureFlags((_keys, variants) => {
             setFlags(variants);

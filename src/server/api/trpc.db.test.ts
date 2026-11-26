@@ -29,12 +29,12 @@ afterEach(() => {
 describe("identity and RBAC are fail-closed", () => {
   it("rejects a missing x-user-id header with UNAUTHORIZED", async () => {
     const caller = await defaultCaller({});
-    await expect(caller.example.list()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    await expect(caller.feedback.listMine()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
   });
 
   it("rejects a blank x-user-id header with UNAUTHORIZED", async () => {
     const caller = await defaultCaller({ "x-user-id": "   " });
-    await expect(caller.example.list()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    await expect(caller.feedback.listMine()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
   });
 
   it("ignores the header when TRUST_IDENTITY_HEADER is false", async () => {
@@ -42,12 +42,12 @@ describe("identity and RBAC are fail-closed", () => {
       { TRUST_IDENTITY_HEADER: "false" },
       { "x-user-id": "alice" },
     );
-    await expect(caller.example.list()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    await expect(caller.feedback.listMine()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
   }, 15_000);
 
   it("accepts the header when TRUST_IDENTITY_HEADER is true", async () => {
-    const caller = await defaultCaller({ "x-user-id": "trpc-identity-test" });
-    await expect(caller.example.list()).resolves.toEqual([]);
+    const caller = await defaultCaller({ "x-user-id": `trpc-identity-${Date.now()}` });
+    await expect(caller.feedback.listMine()).resolves.toEqual([]);
   });
 
   it("rejects non-admin users on adminProcedure and permits header admins", async () => {
