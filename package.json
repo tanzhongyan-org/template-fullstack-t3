@@ -28,7 +28,7 @@
     "@tanstack/react-query": "^5.108.4",
     "@trpc/client": "^11.31.3",
     "@trpc/server": "^11.31.3",
-    "@trpc/tanstack-react-query": "^11.28.0",
+    "@trpc/tanstack-react-query": "^11.31.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.4",
@@ -36,7 +36,7 @@
     "next": "16.4.6",
     "next-themes": "^0.4.6",
     "postgres": "^4.1.1",
-    "posthog-node": "^5.74.0",
+    "posthog-node": "^6.1.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "server-only": "^0.0.1",
@@ -54,7 +54,7 @@
     "@storybook/nextjs": "10.6.9",
     "@storybook/react": "10.6.9",
     "@tailwindcss/postcss": "^4.3.5",
-    "@types/node": "^24.19.4",
+    "@types/node": "^26.6.11",
     "@types/react": "^19.3.3",
     "@types/react-dom": "^19.3.0",
     "@vitest/coverage-v8": "^5.1.2",
@@ -77,14 +77,14 @@
   ],
   "overrides": {
     "esbuild": "^0.28.2",
-    "katex": "^0.19.0",
-    "re2js": "^2.9.1",
-    "webpack-dev-middleware": "^8.5.0",
-    "glob": "^14.0.3",
-    "minimatch": "^11.0.3"
+    "katex": "^0.19.1",
+    "re2js": "^2.10.0",
+    "webpack-dev-middleware": "^8.6.3",
+    "glob": "^14.0.6",
+    "minimatch": "^11.0.9"
   },
   "engines": {
-    "node": ">=22.12"
+    "node": ">=26.0.0"
   },
   "knip": {
     "next": false,

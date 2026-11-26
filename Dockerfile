@@ -13,7 +13,7 @@ COPY . .
 ENV SKIP_ENV_VALIDATION=1
 RUN bun run build
 
-FROM node:22-alpine AS runner
+FROM node:26-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 RUN addgroup -S app && adduser -S app -G app

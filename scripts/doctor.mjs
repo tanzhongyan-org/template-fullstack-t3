@@ -17,12 +17,12 @@ const fail = (msg) => {
   fatal = true;
 };
 
-// 1. Node.js >= 22.12
-const [major = 0, minor = 0] = process.versions.node.split(".").map(Number);
-if (major > 22 || (major === 22 && minor >= 12)) {
+// 1. Node.js >= 26.0.0
+const [major = 0] = process.versions.node.split(".").map(Number);
+if (major >= 26) {
   ok(`Node.js v${process.versions.node}`);
 } else {
-  fail(`Node.js v${process.versions.node} is below >= 22.12`);
+  fail(`Node.js v${process.versions.node} is below >= 26.0.0`);
 }
 
 // 2. Bun

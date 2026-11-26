@@ -20,14 +20,9 @@
       "platformAutomerge": true
     },
     {
-      "description": "Hold the Node 22 LTS line across engines, actions, and types",
+      "description": "Hold the Node 26 LTS line across engines, actions, and types",
       "matchPackageNames": ["node", "@types/node"],
-      "allowedVersions": "<23"
-    },
-    {
-      "description": "Hold typescript and typescript5 below 7: hey-api openapi-ts crashes on TypeScript 7",
-      "matchPackageNames": ["typescript", "typescript5"],
-      "allowedVersions": "<7"
+      "allowedVersions": "<27"
     }
   ],
   "customManagers": [
