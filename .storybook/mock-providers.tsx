@@ -1,12 +1,11 @@
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { TRPCLink } from "@trpc/client";
-import { TRPCClientError } from "@trpc/client";
+import { createTRPCClient, TRPCClientError, type TRPCLink } from "@trpc/client";
 import { observable } from "@trpc/server/observable";
 import { ThemeProvider } from "next-themes";
 import { useState } from "react";
 import type { AppRouter } from "~/server/api/root";
 import { createQueryClient } from "~/trpc/query-client";
-import { api } from "~/trpc/react";
+import { TRPCProvider } from "~/trpc/react";
 
 /**
  * Shared mock providers for stories: theme, auth-flavoured tRPC, and query
@@ -47,14 +46,14 @@ export function MockAppProviders({
     client.setDefaultOptions({ queries: { ...client.getDefaultOptions().queries, retry: false } });
     return client;
   });
-  const [trpcClient] = useState(() => api.createClient({ links: [mockLink(mocks)] }));
+  const [trpcClient] = useState(() => createTRPCClient<AppRouter>({ links: [mockLink(mocks)] }));
 
   return (
     <ThemeProvider attribute="class" forcedTheme={theme} disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
-        <api.Provider client={trpcClient} queryClient={queryClient}>
+        <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
           {children}
-        </api.Provider>
+        </TRPCProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

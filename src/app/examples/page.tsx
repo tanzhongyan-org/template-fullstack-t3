@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { ExampleManager } from "~/features/_example";
 import { Skeleton } from "~/shared/components/ui/skeleton";
 import { site } from "~/shared/config/site";
-import { api, HydrateClient } from "~/trpc/server";
+import { getQueryClient, HydrateClient, trpc } from "~/trpc/server";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,8 @@ export const metadata: Metadata = {
 };
 
 export default async function ExamplesPage() {
-  void api.example.list.prefetch().catch(() => undefined);
+  const queryClient = getQueryClient();
+  void queryClient.prefetchQuery(trpc.example.list.queryOptions()).catch(() => undefined);
 
   return (
     <HydrateClient>
