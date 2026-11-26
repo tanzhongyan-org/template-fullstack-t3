@@ -27,7 +27,7 @@ jobs:
       contents: read
     services:
       postgres:
-        image: postgres:18-alpine
+        image: postgres:19-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
@@ -48,7 +48,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up the toolchain
-        uses: tanzhongyan-org/.github/.github/actions/setup@33bb193f8f32e5b3f715c9e1dff6e36667d8e70d # fleet pin 2026-10-29
+        uses: tanzhongyan-org/.github/.github/actions/setup@770874f61526508deac7a5713e408079ba016d62 # v1
         with:
           runtime: t3
           playwright: "true"

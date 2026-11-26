@@ -1,12 +1,12 @@
 # Self-host exit: serves the standalone Next.js build with its own Postgres.
 # TEMPLATE-TODO(deploy): point DATABASE_URL at the production database.
 
-FROM oven/bun:1.4.4 AS deps
+FROM oven/bun:1.4.5 AS deps
 WORKDIR /app
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
-FROM oven/bun:1.4.4 AS builder
+FROM oven/bun:1.4.5 AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
