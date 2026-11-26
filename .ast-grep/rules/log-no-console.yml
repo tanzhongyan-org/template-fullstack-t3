@@ -6,7 +6,6 @@ files:
   - "src/**"
   - "packages/**"
   - "e2e/**"
-  - "evals/**"
   - ".storybook/**"
 ignores:
   - "src/server/log.ts"
@@ -26,7 +25,6 @@ files:
   - "src/**"
   - "packages/**"
   - "e2e/**"
-  - "evals/**"
   - ".storybook/**"
 ignores:
   - "src/server/email.ts"

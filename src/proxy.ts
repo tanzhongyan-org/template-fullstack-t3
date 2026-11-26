@@ -5,11 +5,12 @@ import { type NextRequest, NextResponse } from "next/server";
  * skips static assets and images so they never become function invocations.
  */
 export function proxy(request: NextRequest) {
+  const requestId = request.headers.get("x-request-id")?.trim() || crypto.randomUUID();
   const headers = new Headers(request.headers);
-  if (!headers.has("x-request-id")) {
-    headers.set("x-request-id", crypto.randomUUID());
-  }
-  return NextResponse.next({ request: { headers } });
+  headers.set("x-request-id", requestId);
+  const response = NextResponse.next({ request: { headers } });
+  response.headers.set("x-request-id", requestId);
+  return response;
 }
 
 export const config = {

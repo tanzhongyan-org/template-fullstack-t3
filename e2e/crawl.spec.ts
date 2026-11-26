@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 
 /**
  * Nav crawler: every sitemap URL answers 200 with no console errors and no
- * scaffold-default title. Auth-gated demo routes (/examples, /notes) render
- * the signed-out state without an identity header, so they are checked for
+ * scaffold-default title. Auth-gated demo routes (/examples) render the
+ * signed-out state without an identity header, so they are checked for
  * reachability and title only.
  */
 test("sitemap routes are clean", async ({ page, request, baseURL }) => {
@@ -34,10 +34,8 @@ test("sitemap routes are clean", async ({ page, request, baseURL }) => {
   expect(errors).toEqual([]);
 });
 
-test("demo routes are reachable", async ({ page }) => {
-  for (const path of ["/examples", "/notes"]) {
-    const response = await page.goto(path, { waitUntil: "networkidle" });
-    expect(response?.status(), path).toBe(200);
-    await expect(page.getByRole("heading", { level: 1 })).not.toHaveCount(0);
-  }
+test("example route is reachable", async ({ page }) => {
+  const response = await page.goto("/examples", { waitUntil: "networkidle" });
+  expect(response?.status(), "/examples").toBe(200);
+  await expect(page.getByRole("heading", { level: 1 })).not.toHaveCount(0);
 });

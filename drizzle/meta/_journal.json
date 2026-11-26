@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1793117757138,
-      "tag": "0000_gifted_patch",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1793260520706,
-      "tag": "0001_talented_iron_monger",
+      "when": 1795666830744,
+      "tag": "0000_init",
       "breakpoints": true
     }
   ]

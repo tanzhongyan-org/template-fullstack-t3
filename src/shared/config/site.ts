@@ -15,7 +15,7 @@ export interface LegalSection {
 }
 
 export const site = {
-  // TEMPLATE-BRAND(name): replace with the product name from DESIGN.md.
+  // TEMPLATE-BRAND(name): replace with your product name.
   name: "Example",
   // TEMPLATE-BRAND(tagline): one line under the name on the landing page.
   tagline: "Ship a typed product in days, not weeks.",
@@ -29,12 +29,10 @@ export const site = {
   nav: {
     primary: [
       { label: "Examples", href: "/examples" },
-      { label: "Notes", href: "/notes" },
       { label: "Pricing", href: "/#pricing" },
     ] satisfies NavLink[],
     footer: [
       { label: "Examples", href: "/examples" },
-      { label: "Notes", href: "/notes" },
       { label: "Privacy", href: "/privacy" },
       { label: "Terms", href: "/terms" },
       { label: "Refunds", href: "/refund" },
@@ -99,12 +97,8 @@ export const site = {
       },
     ] satisfies LegalSection[],
   },
-  // TEMPLATE-BRAND(owner): the owner address for budget alerts and the digest.
+  // TEMPLATE-BRAND(owner): the owner address for transactional alerts and support.
   ownerEmail: "owner@example.com",
-  metrics: {
-    /** Kill date from EXPERIENCE.md ## Brief; the digest counts down to it. */
-    killDate: null as string | null,
-  },
 };
 
 export type Site = typeof site;

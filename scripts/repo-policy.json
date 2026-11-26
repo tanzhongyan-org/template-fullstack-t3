@@ -11,7 +11,6 @@
       "docs",
       "drizzle",
       "e2e",
-      "evals",
       "packages",
       "public",
       "scripts",
@@ -29,7 +28,7 @@
   },
   "docs": {
     "exclude": ["docs/plans/**", "docs/specs/**", "docs/archive/**", ".agents/**", ".worktrees/**"],
-    "externalPrefixes": ["workflow/", "shared/"],
+    "externalPrefixes": [],
     "ignorePaths": [".next", ".env", "node_modules", "bun.lock", "next-env.d.ts"],
     "envExample": ".env.example",
     "envDocumentedIn": "README.md"

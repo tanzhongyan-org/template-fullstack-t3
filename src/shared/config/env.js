@@ -14,29 +14,43 @@ export const env = createEnv({
     VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
     /**
      * Honour the `x-user-id` request header as the caller identity. Defaults to false, which
-     * rejects every request with UNAUTHORIZED. Set it only behind a gateway that sets the header.
+     * rejects every request with UNAUTHORIZED. Must remain false in production and preview.
      */
     TRUST_IDENTITY_HEADER: z.stringbool().default(false),
+    /** Comma-separated user IDs granted the `admin` role in getServerSession. */
+    ADMIN_USER_IDS: z.string().optional(),
+    /** Override PostgreSQL prepared statement behaviour. Defaults to false for pooler URLs. */
+    DB_PREPARE_STATEMENTS: z.stringbool().optional(),
+    /** Maximum connections in the Postgres pool per server process. */
+    DB_MAX_CONNECTIONS: z.coerce.number().int().min(1).max(100).optional(),
     /** Resend API key. Unset means console email in local development only. */
     RESEND_API_KEY: z.string().min(1).optional(),
     /** Sender address for transactional mail; required when RESEND_API_KEY is set. */
     EMAIL_FROM: z.string().min(1).optional(),
-    /** PostHog Cloud project key. Unset disables analytics. */
+    /** PostHog Cloud project key. Unset disables server analytics. */
     POSTHOG_API_KEY: z.string().min(1).optional(),
     POSTHOG_HOST: z.string().url().optional(),
+    /** Optional Sentry DSN for server error reporting in instrumentation and tRPC onError. */
+    SENTRY_DSN: z.string().url().optional(),
     /** Bearer secret guarding /api/cron/*. Unset means crons run in local development only. */
     CRON_SECRET: z.string().min(1).optional(),
-    /** Webhook signing secret per environment. Unset means the webhook route answers 503. */
+    /** Active payment provider adapter key (`src/server/payments/index.ts`). */
+    PAYMENT_PROVIDER: z.enum(["stripe"]).default("stripe"),
+    /** Stripe webhook signing secret per environment. Unset means the webhook answers 503. */
     STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
-    /** Turnstile secret for the waitlist form. Unset skips verification in local development. */
-    TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
   },
 
   /**
    * Client-side variables. Prefix each with `NEXT_PUBLIC_`.
    */
   client: {
-    NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().min(1).optional(),
+    /** Optional PostHog browser key; enables client AnalyticsProvider when set. */
+    NEXT_PUBLIC_POSTHOG_KEY: z.string().min(1).optional(),
+    NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
+    /** Enables privacy-masked PostHog session replay when NEXT_PUBLIC_POSTHOG_KEY is set. */
+    NEXT_PUBLIC_POSTHOG_REPLAY: z.stringbool().default(false),
+    /** Enables PostHog click heatmaps when NEXT_PUBLIC_POSTHOG_KEY is set. */
+    NEXT_PUBLIC_POSTHOG_HEATMAPS: z.stringbool().default(false),
   },
 
   /**
@@ -49,14 +63,21 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     VERCEL_ENV: process.env.VERCEL_ENV,
     TRUST_IDENTITY_HEADER: process.env.TRUST_IDENTITY_HEADER,
+    ADMIN_USER_IDS: process.env.ADMIN_USER_IDS,
+    DB_PREPARE_STATEMENTS: process.env.DB_PREPARE_STATEMENTS,
+    DB_MAX_CONNECTIONS: process.env.DB_MAX_CONNECTIONS,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM,
     POSTHOG_API_KEY: process.env.POSTHOG_API_KEY,
     POSTHOG_HOST: process.env.POSTHOG_HOST,
+    SENTRY_DSN: process.env.SENTRY_DSN,
     CRON_SECRET: process.env.CRON_SECRET,
+    PAYMENT_PROVIDER: process.env.PAYMENT_PROVIDER,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
-    TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY,
-    NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+    NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
+    NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    NEXT_PUBLIC_POSTHOG_REPLAY: process.env.NEXT_PUBLIC_POSTHOG_REPLAY,
+    NEXT_PUBLIC_POSTHOG_HEATMAPS: process.env.NEXT_PUBLIC_POSTHOG_HEATMAPS,
   },
   /**
    * Set `SKIP_ENV_VALIDATION` to skip validation, for example in Docker builds.
@@ -69,15 +90,25 @@ export const env = createEnv({
 });
 
 /**
- * Fail closed at boot: the header-identity stub and console email must never
- * run on Vercel production or preview, and mail needs a sender when it is on.
+ * Interpret a boolean env flag safely even when SKIP_ENV_VALIDATION leaves raw strings.
+ * @param {unknown} value
+ * @returns {boolean}
  */
-if (
-  env.TRUST_IDENTITY_HEADER &&
-  (env.VERCEL_ENV === "production" || env.VERCEL_ENV === "preview")
-) {
-  throw new Error("TRUST_IDENTITY_HEADER must be false on Vercel production and preview.");
-}
-if (env.RESEND_API_KEY && !env.EMAIL_FROM) {
-  throw new Error("EMAIL_FROM is required when RESEND_API_KEY is set.");
+export const isEnvTrue = (value) => value === true || value === "true";
+
+/**
+ * Fail closed at boot on the server: the header-identity stub must never run in
+ * production or preview environments (Docker/self-host or Vercel), and mail
+ * needs a sender when it is on.
+ */
+if (typeof window === "undefined") {
+  const trustHeader = isEnvTrue(env.TRUST_IDENTITY_HEADER);
+  const isVercelProdOrPreview = env.VERCEL_ENV === "production" || env.VERCEL_ENV === "preview";
+  const isRuntimeProd = env.NODE_ENV === "production" && process.env.NEXT_BUILDING !== "1";
+  if (trustHeader && (isVercelProdOrPreview || isRuntimeProd)) {
+    throw new Error("TRUST_IDENTITY_HEADER must be false in production and preview environments.");
+  }
+  if (env.RESEND_API_KEY && !env.EMAIL_FROM) {
+    throw new Error("EMAIL_FROM is required when RESEND_API_KEY is set.");
+  }
 }

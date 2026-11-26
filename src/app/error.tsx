@@ -15,8 +15,11 @@ export default function ErrorPage({
     <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
       <h1 className="text-2xl font-bold">Something went wrong</h1>
       <p className="text-sm text-muted-foreground">
-        {needsSignIn ? "Sign in to view your notes." : "Reload the page to try again."}
+        {needsSignIn ? "Sign in to view this page." : "Reload the page to try again."}
       </p>
+      {error.digest ? (
+        <p className="font-mono text-xs text-muted-foreground">Reference: {error.digest}</p>
+      ) : null}
       {needsSignIn ? null : <Button onClick={() => reset()}>Try again</Button>}
     </main>
   );

@@ -1,19 +1,11 @@
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq } from "drizzle-orm";
-import { trackServer } from "~/server/analytics";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { contentValues } from "~/server/db/owned";
 import { examples } from "~/server/db/schema";
 import { sendEmail } from "~/server/email";
-import { recordUsage } from "~/server/usage";
 import { site } from "~/shared/config/site";
-import {
-  askExampleSchema,
-  createExampleSchema,
-  exampleIdSchema,
-  updateExampleSchema,
-} from "../schemas/example";
-import { fakeComplete } from "./ai";
+import { createExampleSchema, exampleIdSchema, updateExampleSchema } from "../schemas/example";
 import { exampleCreatedEmail } from "./email";
 
 const exampleNotFound = () => new TRPCError({ code: "NOT_FOUND", message: "Example not found" });
@@ -63,22 +55,5 @@ export const exampleRouter = createTRPCRouter({
       .returning();
     if (!deleted) throw exampleNotFound();
     return { success: true };
-  }),
-
-  /** Fake AI endpoint: answers, records one usage_event row, and tracks ai_response. */
-  askAi: protectedProcedure.input(askExampleSchema).mutation(async ({ ctx, input }) => {
-    const answer = fakeComplete(input.prompt);
-    await recordUsage({
-      feature: "example-ai",
-      provider: "fake",
-      units: input.prompt.length,
-      costMinor: 0,
-    });
-    await trackServer({
-      event: "ai_response",
-      distinctId: ctx.ownerId,
-      properties: { feature: "example-ai" },
-    });
-    return { answer };
   }),
 });

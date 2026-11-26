@@ -1,7 +1,5 @@
 import { exampleRouter } from "~/features/_example/server/router";
 import { feedbackRouter } from "~/features/feedback/server/router";
-import { notesRouter } from "~/features/notes/server/router";
-import { waitlistRouter } from "~/features/waitlist/server/router";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -11,8 +9,6 @@ import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
  * `make new-feature` registers new routers in this map.
  */
 export const appRouter = createTRPCRouter({
-  notes: notesRouter,
-  waitlist: waitlistRouter,
   feedback: feedbackRouter,
   example: exampleRouter,
 });

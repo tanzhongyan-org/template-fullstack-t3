@@ -11,7 +11,3 @@ export const updateExampleSchema = exampleIdSchema.extend({
   title: z.string().min(1).max(200).optional(),
   body: z.string().optional(),
 });
-
-export const askExampleSchema = z.object({
-  prompt: z.string().min(1).max(2000),
-});
