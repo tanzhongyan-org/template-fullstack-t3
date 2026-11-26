@@ -40,5 +40,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "generated", "coverage", ".worktrees"]
+  "exclude": ["node_modules", "generated", "coverage", "storybook-static", ".worktrees"]
 }

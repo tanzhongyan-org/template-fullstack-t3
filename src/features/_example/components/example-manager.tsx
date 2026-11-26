@@ -1,6 +1,7 @@
 "use client";
 
-import { api } from "~/trpc/react";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTRPC } from "~/trpc/react";
 import { ExampleForm } from "./example-form";
 import { ExampleList } from "./example-list";
 
@@ -9,7 +10,8 @@ import { ExampleList } from "./example-list";
  * route loading.tsx and error.tsx; the list covers empty and ready.
  */
 export function ExampleManager() {
-  const [items] = api.example.list.useSuspenseQuery();
+  const trpc = useTRPC();
+  const { data: items } = useSuspenseQuery(trpc.example.list.queryOptions());
 
   return (
     <div className="flex w-full max-w-md flex-col gap-6">

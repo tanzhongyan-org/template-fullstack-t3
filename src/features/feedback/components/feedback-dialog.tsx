@@ -1,6 +1,7 @@
 "use client";
 
 import { track } from "@repo/shared/analytics";
+import { useMutation } from "@tanstack/react-query";
 import { MessageSquarePlus } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
@@ -17,7 +18,7 @@ import {
 } from "~/shared/components/ui/dialog";
 import { Label } from "~/shared/components/ui/label";
 import { Textarea } from "~/shared/components/ui/textarea";
-import { api } from "~/trpc/react";
+import { useTRPC } from "~/trpc/react";
 
 type FeedbackKind = "idea" | "bug" | "praise";
 
@@ -48,17 +49,20 @@ export function FeedbackDialog() {
   const [body, setBody] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const submit = api.feedback.submit.useMutation({
-    onSuccess: () => {
-      void track({ event: "feedback_submitted", properties: { kind } });
-      setBody("");
-      setOpen(false);
-      toast.success("Thanks for your feedback");
-    },
-    onError: () => {
-      textareaRef.current?.focus();
-    },
-  });
+  const trpc = useTRPC();
+  const submit = useMutation(
+    trpc.feedback.submit.mutationOptions({
+      onSuccess: () => {
+        void track({ event: "feedback_submitted", properties: { kind } });
+        setBody("");
+        setOpen(false);
+        toast.success("Thanks for your feedback");
+      },
+      onError: () => {
+        textareaRef.current?.focus();
+      },
+    }),
+  );
 
   return (
     <Dialog

@@ -1,23 +1,27 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "~/shared/components/ui/button";
 import { Input } from "~/shared/components/ui/input";
 import { Label } from "~/shared/components/ui/label";
 import { Textarea } from "~/shared/components/ui/textarea";
-import { api } from "~/trpc/react";
+import { useTRPC } from "~/trpc/react";
 
 export function ExampleForm() {
-  const utils = api.useUtils();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const create = api.example.create.useMutation({
-    onSuccess: async () => {
-      await utils.example.invalidate();
-      setTitle("");
-      setBody("");
-    },
-  });
+  const create = useMutation(
+    trpc.example.create.mutationOptions({
+      onSuccess: async () => {
+        await queryClient.invalidateQueries(trpc.example.pathFilter());
+        setTitle("");
+        setBody("");
+      },
+    }),
+  );
 
   return (
     <form
