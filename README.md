@@ -10,7 +10,7 @@ A production-ready, agent-friendly fullstack Next.js template built on the T3 st
 
 Install these prerequisites first:
 
-- [Bun](https://bun.sh) and Node.js 22.12 or later.
+- [Bun](https://bun.sh) and Node.js 26.0 or later.
 - [Docker](https://docs.docker.com/get-docker/) for local PostgreSQL (or point `DATABASE_URL` at Supabase/Neon).
 - GNU make. On Windows run `winget install ezwinports.make`; on macOS run `xcode-select --install`. Restart your terminal afterwards.
 

@@ -17,10 +17,21 @@ let testAdapter: AnalyticsAdapter | null = null;
 
 const getPostHogClient = (): PostHog | null => {
   if (!env.POSTHOG_API_KEY) return null;
-  posthogClient ??= new PostHog(env.POSTHOG_API_KEY, {
-    host: env.POSTHOG_HOST ?? "https://us.i.posthog.com",
-    flushAt: 1,
-  });
+  if (!posthogClient) {
+    const client = new PostHog(env.POSTHOG_API_KEY, {
+      host: env.POSTHOG_HOST ?? "https://us.i.posthog.com",
+      flushAt: 1,
+    });
+    // Delivery failures in posthog-node v6 emit on 'error' instead of rejecting flush().
+    client.on("error", (error: unknown) => {
+      logError({
+        requestId: "analytics",
+        event: "analytics.client_error",
+        error: error instanceof Error ? error.message : "unknown analytics error",
+      });
+    });
+    posthogClient = client;
+  }
   return posthogClient;
 };
 
@@ -28,17 +39,24 @@ const defaultAdapter: AnalyticsAdapter = {
   async capture(payload) {
     const posthog = getPostHogClient();
     if (!posthog) return;
+    const { $process_person_profile: processPersonProfile, ...restProperties } =
+      payload.properties ?? {};
+    const hasRestProperties = Object.keys(restProperties).length > 0;
     posthog.capture({
       distinctId: payload.distinctId,
       event: payload.event,
-      properties: payload.properties,
+      ...(hasRestProperties ? { properties: restProperties } : {}),
+      ...(typeof processPersonProfile === "boolean"
+        ? { options: { process_person_profile: processPersonProfile } }
+        : {}),
     });
     await posthog.flush();
   },
   async getFeatureFlag(flag, distinctId) {
     const posthog = getPostHogClient();
     if (!posthog) return undefined;
-    return posthog.getFeatureFlag(flag, distinctId);
+    const flags = await posthog.evaluateFlags(distinctId, { flagKeys: [flag] });
+    return flags.getFlag(flag);
   },
 };
 
